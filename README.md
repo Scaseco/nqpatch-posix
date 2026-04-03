@@ -1,7 +1,7 @@
 # RDFPatch NQ Posix
 
 Patches large RDF files like Wikidata in less than 1 hour on consumer hardware.
-All involved files most be based on byte sorted N-Quads such as produced by `LC_ALL=C sort -u`.
+All involved files must be based on byte sorted N-Quads such as produced by `LC_ALL=C sort -u`.
 
 * Arguments that start with a `@` are interpreted as "factory expressions".
   The reason is, that scanning for added and removed quads must happen independently. The file is thus opened twice − once for each scan.
@@ -9,6 +9,8 @@ All involved files most be based on byte sorted N-Quads such as produced by `LC_
 
 Omitting the `@` will try to decode files using `zcat`. On many systems, default `zcat` only supports gzip, but
 installing `sudo apt install zutils` overrides this with a general customizable decoding system.
+
+Measurements on an *AMD Ryzen AI Max+ 395:
 
 ```bash
 ./rdfpatch-nq-apply.sh \
