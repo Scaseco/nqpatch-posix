@@ -32,6 +32,23 @@ md5sum wikidata-20250918-truthy-BETA.sorted.nt.bz2
 # 46.904 total
 ```
 
+## Merging Patchfile
+
+```
+./rdfpatch-nq-merge.sh test/patch-1-to-2.rdfp test/patch-2-to-3.rdfp # patch-1-to-3.rdfp
+```
+
+## Apply a merged patch
+
+
+```
+# =(command) materializes the process output into a temporary file
+./rdfpatch-nq-apply.sh test/snapshot1.nq =(./rdfpatch-nq-merge.sh test/patch-1-to-2.rdfp test/patch-2-to-3.rdfp)
+
+# Avoid, because it will start the merge process twice, which can be sub-par for many files.
+./rdfpatch-nq-apply.sh test/snapshot1.nq '@./rdfpatch-nq-merge.sh test/patch-1-to-2.rdfp test/patch-2-to-3.rdfp'
+```
+
 ## Toy example:
 
 ```
