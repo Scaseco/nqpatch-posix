@@ -1,6 +1,12 @@
 # RDFPatch NQ Posix
 
 Patches large RDF files like Wikidata in less than 1 hour on consumer hardware.
+All involved files most be based on byte sorted N-Quads such as produced by `LC_ALL=C sort -u`.
+
+* Arguments that start with a `@` are interpreted as "factory expressions" for rdfp streams.
+
+Omitting the `@` will try to decode files using `zcat`. On many systems, default `zcat` only support gzip, but
+installing `sudo apt install zutils` overrides this with a general customizable decoding system.
 
 ```bash
 ./rdfpatch-nq-apply.sh \
@@ -12,10 +18,13 @@ Patches large RDF files like Wikidata in less than 1 hour on consumer hardware.
 # 41:47.11 total
 ```
 
+```bash
 md5sum patched-20250918.nt.bz2
 # 3aee2213ab4d4367f5ea6ba75b6eaf68
 # 45.883 total
+```
 
+```Bash
 md5sum wikidata-20250918-truthy-BETA.sorted.nt.bz2 
 # 3aee2213ab4d4367f5ea6ba75b6eaf68
 # 46.904 total
