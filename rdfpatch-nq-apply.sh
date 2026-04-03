@@ -24,7 +24,6 @@ apply_one_patch() {
     comm -23 \
         <(eval "$base_cmd") \
         <(eval "$patch_factory" | sed -n 's/^D //p') \
-
     | sort -m - \
         <(eval "$patch_factory" | sed -n 's/^A //p')
 }
