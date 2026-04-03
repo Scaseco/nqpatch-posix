@@ -7,7 +7,7 @@ All involved files most be based on byte sorted N-Quads such as produced by `LC_
   The reason is, that scanning for added and removed quads must happen independently. The file is thus opened twice − once for each scan.
   Do not use process substitution as in `./rdfpatch-nq-apply.sh <(lbzcat file.rdfp.bz2)` - it won't work because the pipe-file cannot be read twice.
 
-Omitting the `@` will try to decode files using `zcat`. On many systems, default `zcat` only support gzip, but
+Omitting the `@` will try to decode files using `zcat`. On many systems, default `zcat` only supports gzip, but
 installing `sudo apt install zutils` overrides this with a general customizable decoding system.
 
 ```bash
