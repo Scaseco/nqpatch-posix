@@ -1,42 +1,51 @@
 #!/bin/bash
 set -euo pipefail
-
-# Standardize collation globally to prevent "not sorted" errors
 export LC_ALL=C
 
-if [ $# -lt 2 ]; then
-  echo "Usage: $0 base.nq patch1.rdfp [patch2.rdfp ...]" >&2
-  echo
-  echo "Apply sorted .rdfp patches (A/D prefix + sorted payload) to sorted .nq"
-  echo
-  echo "💡 Pro-Tip: Use process substitution for compressed/encoded data:"
-  echo "  $0 <(lbzcat base.nq.bz2) <(lbzcat patch.rdfp.bz2)"
-  exit 1
-fi
-
-BASE_FILE="$1"
-shift
-
-# Function to apply a patch as a stream filter
-apply_patch_filter() {
-    local patch_file="$1"
-
-    # TODO Remove? → We use --nocheck-order to stop comm from crashing on minor buffer/timing blips.
-    # We assume the user has sorted their inputs correctly.
-    comm -23 - <(sed -n 's/^D //p' "$patch_file") | \
-    sort -m - <(sed -n 's/^A //p' "$patch_file")
+# Helper: Detects file type and returns the proper 'cat' command
+get_cat_cmd() {
+    local file="$1"
+    if [[ "$file" == *.bz2 ]]; then
+        echo "lbzcat \"$file\""
+    elif [[ "$file" == *.gz ]]; then
+        echo "zcat \"$file\""
+    else
+        echo "cat \"$file\""
+    fi
 }
 
-# 1. Start the stream with the base file
-# 2. Sequentially pipe through each patch filter
-# This creates a single long pipeline: cat | filter | filter | ...
-CMD="cat \"$BASE_FILE\""
-for patch in "$@"; do
-    # We append the filter logic to the command string
-    # We use a subshell for the filter to keep logic encapsulated
-    CMD="$CMD | apply_patch_filter \"$patch\""
+# The core logic: resolves an argument to a "factory" command string
+resolve_factory() {
+    local arg="$1"
+    if [[ "$arg" == @* ]]; then
+        # It's a factory command (remove the leading @)
+        echo "${arg:1}"
+    else
+        # It's a regular file; auto-detect the cat tool
+        get_cat_cmd "$arg"
+    fi
+}
+
+apply_one_patch() {
+    local base_cmd="$1"
+    local patch_factory="$2"
+
+    # Evaluate the patch factory twice to avoid stream deadlocks
+    comm -23 \
+        <(eval "$base_cmd") \
+        <(eval "$patch_factory" | sed -n 's/^D //p') \
+
+    | sort -m - \
+        <(eval "$patch_factory" | sed -n 's/^A //p')
+}
+
+# Main initialization
+CURRENT=$(resolve_factory "$1")
+
+for arg in "${@:2}"; do
+    FACTORY=$(resolve_factory "$arg")
+    CURRENT="apply_one_patch \"$CURRENT\" \"$FACTORY\""
 done
 
-# Execute the final pipeline
-eval "$CMD"
+eval "$CURRENT"
 
