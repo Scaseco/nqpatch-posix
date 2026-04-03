@@ -4,7 +4,7 @@ Patches large RDF files like Wikidata in less than 1 hour on consumer hardware.
 All involved files most be based on byte sorted N-Quads such as produced by `LC_ALL=C sort -u`.
 
 * Arguments that start with a `@` are interpreted as "factory expressions".
-  The reason is, that patch files need to be scanned twice − for the added and removed quads, respectively.
+  The reason is, that scanning for added and removed quads must happen independently. The file is thus opened twice − once for each scan.
   Do not use process substitution as in `./rdfpatch-nq-apply.sh <(lbzcat file.rdfp.bz2)` - it won't work because the pipe-file cannot be read twice.
 
 Omitting the `@` will try to decode files using `zcat`. On many systems, default `zcat` only support gzip, but
