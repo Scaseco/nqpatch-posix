@@ -3,6 +3,8 @@
 Patches large RDF files like Wikidata in less than 1 hour on consumer hardware.
 All involved files must be based on byte sorted N-Quads such as produced by `LC_ALL=C sort -u`.
 
+Project Status: Experimental - Functional but not battletested.
+
 * Arguments that start with a `@` are interpreted as "factory expressions".
   The reason is, that scanning for added and removed quads must happen independently. The file is thus opened twice − once for each scan.
   Do not use process substitution as in `./rdfpatch-nq-apply.sh <(lbzcat file.rdfp.bz2)` - it won't work because the pipe-file cannot be read twice.
