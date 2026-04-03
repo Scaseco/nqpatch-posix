@@ -2,6 +2,10 @@
 
 Command-line tools for efficiently patching large sorted N-Quads files.
 
+## Project Status
+
+- ⚠️ Experimental - functional but not battle-tested
+
 ## Overview
 
 This project provides three shell scripts for working with RDF patch files:
@@ -105,7 +109,6 @@ See `test/` directory for toy examples:
 ## Limitations
 
 - ⚠️ Byte-level diff requires identical whitespace, encoding, and line endings
-- ⚠️ Experimental - functional but not battle-tested
 - ⚠️ Patches must be applied to the same base file they were created from
 
 ## License
