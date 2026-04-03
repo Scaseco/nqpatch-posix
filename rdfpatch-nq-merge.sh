@@ -14,7 +14,8 @@ fi
 
 # Build the command to merge the pre-sorted streams
 # We use -k2 to ignore the A/D prefix during the merge comparison
-MERGE_CMD="sort -m -k2"
+# Sort must be stable (-s) because argument order is relevant!
+MERGE_CMD="sort -m -k2 -s"
 for arg in "$@"; do
     FACTORY=$(resolve_factory "$arg")
     MERGE_CMD="$MERGE_CMD <(eval \"$FACTORY\")"
