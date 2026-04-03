@@ -133,6 +133,17 @@ See `test/` directory for toy examples:
   =(./rdfpatch-nq-merge.sh test/patch-1-to-2.rdfp test/patch-2-to-3.rdfp)
 ```
 
+## Testing
+
+Run the test suite using Bats:
+
+```bash
+cd bats-tests
+./run-tests.sh
+```
+
+See `bats-tests/TESTING.md` for details on the test infrastructure.
+
 ## Limitations
 
 - ⚠️ Byte-level diff requires identical whitespace, encoding, and line endings

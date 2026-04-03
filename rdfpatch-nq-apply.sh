@@ -39,7 +39,8 @@ CURRENT=$(resolve_factory "$1")
 # Sequentially wrap the command for each patch
 for arg in "${@:2}"; do
     FACTORY=$(resolve_factory "$arg")
-    CURRENT="apply_one_patch \"$CURRENT\" \"$FACTORY\""
+    # Use printf %q to properly escape arguments for eval
+    CURRENT=$(printf 'apply_one_patch %s %s' "$(printf '%q' "$CURRENT")" "$(printf '%q' "$FACTORY")")
 done
 
 # Execute the final nested command
