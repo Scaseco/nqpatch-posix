@@ -1,81 +1,112 @@
 # RDFPatch NQ Posix
 
-Patches large RDF files like Wikidata in less than 1 hour on consumer hardware.
-All involved files must be based on byte sorted N-Quads such as produced by `LC_ALL=C sort -u`.
+Command-line tools for efficiently patching large sorted N-Quads files.
 
-Project Status: Experimental - Functional but not battletested.
+## Overview
 
-* Arguments that start with a `@` are interpreted as "factory expressions".
-  The reason is, that scanning for added and removed quads must happen independently. The file is thus opened twice − once for each scan.
-  Do not use process substitution as in `./rdfpatch-nq-apply.sh <(lbzcat file.rdfp.bz2)` - it won't work because the pipe-file cannot be read twice.
+This project provides three shell scripts for working with RDF patch files:
 
-Omitting the `@` will try to decode files using `zcat`. On many systems, default `zcat` only supports gzip, but
-installing `sudo apt install zutils` overrides this with a general customizable decoding system.
+- **rdfpatch-nq-create.sh**: Generate a patch from two sorted N-Quads files
+- **rdfpatch-nq-apply.sh**: Apply one or more patches to a base N-Quads file  
+- **rdfpatch-nq-merge.sh**: Merge multiple patches into a single patch
 
-Measurements on an *AMD Ryzen AI Max+ 395*:
+## Design
+
+The tools rely on `zcat` for transparent decompression of compressed files. By default, system `zcat` only supports gzip, but installing [`zutils`](https://linux.die.net/man/1/zutils) replaces it with a configurable decompression infrastructure that handles BZip2, XZ, LZ4, and other formats.
+
+All tools work with byte-sorted N-Quads (e.g., `LC_ALL=C sort -u`).
+
+## Quick Start
+
+```bash
+# Create a patch from two files
+./rdfpatch-nq-create.sh old.nq new.nq > patch.rdfp
+
+# Apply a patch
+./rdfpatch-nq-apply.sh old.nq patch.rdfp > new.nq
+
+# Merge multiple patches
+./rdfpatch-nq-merge.sh patch1.rdfp patch2.rdfp > merged.rdfp
+```
+
+**Note**: The scripts work with both plain and compressed files. For compressed files, they use `zcat` (or `zutils` if installed for multi-format support).
+
+## Installation
+
+No installation required. Clone and make scripts executable:
+
+```bash
+git clone <repo>
+cd rdfpatch-nq-posix
+chmod +x *.sh
+```
+
+## Usage
+
+### Creating Patches
+
+```bash
+./rdfpatch-nq-create.sh old.sorted.nq new.sorted.nq > patch.rdfp
+```
+
+Patches use the [RDF-Delta](https://afs.github.io/rdf-delta/rdf-patch.html) format with `A` (add) and `D` (delete) prefixes.
+
+### Applying Patches
+
+```bash
+# Plain or compressed files (via zcat/zutils)
+./rdfpatch-nq-apply.sh base.nq[.bz2|.xz] patch.rdfp[.bz2|.xz]
+
+# Multiple patches (applied sequentially)
+./rdfpatch-nq-apply.sh base.nq patch1.rdfp patch2.rdfp
+```
+
+### Merging Patches
+
+```bash
+./rdfpatch-nq-merge.sh patch1.rdfp patch2.rdfp > merged.rdfp
+```
+
+## Factory Expressions
+
+Arguments starting with `@` are interpreted as factory expressions (commands to be evaluated):
 
 ```bash
 ./rdfpatch-nq-apply.sh \
-  '@lbzcat wikidata-20250723-truthy-BETA.sorted.nt.bz2' \
-  '@lbzcat wikidata-20250723-to-20250918-truthy-BETA.sorted.rdfp.bz2' \
-  | pv | lbzip2 -cz > patched-20250918.nt.bz2
-
-# 969GiB 0:41:47 [ 395MiB/s]
-# 41:47.11 total
+  '@lbzcat wikidata.nt.bz2' \
+  '@lbzcat patch.rdfp.bz2' \
+  | lbzcat > result.nt.bz2
 ```
+
+**Note**: Process substitution `<(...)` won't work because files must be readable twice.
+
+## Performance
+
+Tested on AMD Ryzen AI Max+ 395 with Wikidata-scale data:
+
+- 969GiB patch application in **41 minutes 47 seconds**
+- Output verified with md5sum checksums
+
+## Examples
+
+See `test/` directory for toy examples:
 
 ```bash
-md5sum patched-20250918.nt.bz2
-# 3aee2213ab4d4367f5ea6ba75b6eaf68
-# 45.883 total
+# Apply merged patch to snapshot1
+./rdfpatch-nq-apply.sh test/snapshot1.nq test/patch-1-to-2.rdfp test/patch-2-to-3.rdfp
+
+# Or merge first, then apply
+./rdfpatch-nq-apply.sh test/snapshot1.nq \
+  =(./rdfpatch-nq-merge.sh test/patch-1-to-2.rdfp test/patch-2-to-3.rdfp)
 ```
 
-```Bash
-md5sum wikidata-20250918-truthy-BETA.sorted.nt.bz2 
-# 3aee2213ab4d4367f5ea6ba75b6eaf68
-# 46.904 total
-```
+## Limitations
 
-## Merging Patchfile
+- ⚠️ Byte-level diff requires identical whitespace, encoding, and line endings
+- ⚠️ Experimental - functional but not battle-tested
+- ⚠️ Patches must be applied to the same base file they were created from
 
-```
-./rdfpatch-nq-merge.sh test/patch-1-to-2.rdfp test/patch-2-to-3.rdfp # patch-1-to-3.rdfp
-```
+## License
 
-## Apply a merged patch
-
-
-```
-# =(command) materializes the process output into a temporary file
-./rdfpatch-nq-apply.sh test/snapshot1.nq =(./rdfpatch-nq-merge.sh test/patch-1-to-2.rdfp test/patch-2-to-3.rdfp)
-
-# Avoid, because it will start the merge process twice, which can be sub-par for many files.
-./rdfpatch-nq-apply.sh test/snapshot1.nq '@./rdfpatch-nq-merge.sh test/patch-1-to-2.rdfp test/patch-2-to-3.rdfp'
-```
-
-## Toy example:
-
-```
-➜  cat test/old.nq 
-b
-c
-d
-
-➜  cat test/new.nq 
-a
-c
-e
-
-➜  ./rdfpatch-nq-create.sh test/old.nq test/new.nq > test/patch.rdfp
-➜  cat test/patch.rdfp 
-A a
-D b
-D d
-A e
-
-➜  ./rdfpatch-nq-apply.sh test/old.nq test/patch.rdfp
-a
-c
-e
-```
+This project is licensed under the Apache License, Version 2.0. See the [LICENSE](LICENSE) file for details.
 
