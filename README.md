@@ -93,6 +93,33 @@ Tested on AMD Ryzen AI Max+ 395 with Wikidata-scale data:
 - 969GiB patch application in **41 minutes 47 seconds**
 - Output verified with md5sum checksums
 
+<details>
+<summary>Detailed Experiment Output</summary>
+
+```bash
+./rdfpatch-nq-apply.sh \
+  '@lbzcat wikidata-20250723-truthy-BETA.sorted.nt.bz2' \
+  '@lbzcat wikidata-20250723-to-20250918-truthy-BETA.sorted.rdfp.bz2' \
+  | pv | lbzip2 -cz > patched-20250918.nt.bz2
+
+# 969GiB 0:41:47 [ 395MiB/s]
+# 41:47.11 total
+```
+
+```bash
+md5sum patched-20250918.nt.bz2
+# 3aee2213ab4d4367f5ea6ba75b6eaf68
+# 45.883 total
+```
+
+```Bash
+md5sum wikidata-20250918-truthy-BETA.sorted.nt.bz2 
+# 3aee2213ab4d4367f5ea6ba75b6eaf68
+# 46.904 total
+```
+
+</details>
+
 ## Examples
 
 See `test/` directory for toy examples:
