@@ -10,7 +10,7 @@ All involved files must be based on byte sorted N-Quads such as produced by `LC_
 Omitting the `@` will try to decode files using `zcat`. On many systems, default `zcat` only supports gzip, but
 installing `sudo apt install zutils` overrides this with a general customizable decoding system.
 
-Measurements on an *AMD Ryzen AI Max+ 395:
+Measurements on an *AMD Ryzen AI Max+ 395*:
 
 ```bash
 ./rdfpatch-nq-apply.sh \
