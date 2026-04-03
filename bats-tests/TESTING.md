@@ -58,18 +58,16 @@ bats test_apply.bats
 ## Requirements
 
 ### bats-core
-Install from GitHub or npm:
+Install via apt or npm:
+
+```bash
+apt-get install -y bats
+```
+
+Or install via npm:
 
 ```bash
 npm install -g bats-core
-```
-
-Or clone and install:
-
-```bash
-git clone https://github.com/bats-core/bats-core.git
-cd bats-core
-./install.sh /usr/local
 ```
 
 The test runner (`run-tests.sh`) will try to find bats in common locations.
@@ -102,7 +100,7 @@ Added `-s` flag to `sort -m` for stable sorting, preserving the relative order o
 
 ## CI Integration
 
-To use in CI/CD, add bats-core installation and run-tests.sh execution:
+For GitHub Actions on Ubuntu, use apt to install bats:
 
 ```yaml
 # .github/workflows/test.yml
@@ -113,8 +111,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install bats-core
-        run: npm install -g bats-core
+      - name: Install bats
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bats
       - name: Run tests
         run: ./bats-tests/run-tests.sh
 ```

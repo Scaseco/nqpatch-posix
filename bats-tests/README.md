@@ -24,7 +24,7 @@ bats test_apply.bats
 
 ## Test Structure
 
-### test_merge.bats
+### test\_merge.bats
 Tests for the merge script:
 - Stable sort preserves operation order
 - Multiple operations on same triple
@@ -32,13 +32,13 @@ Tests for the merge script:
 - Existing test patches
 - Edge cases (empty patches, single patch, no arguments)
 
-### test_create.bats
+### test\_create.bats
 Tests for the create script:
 - Patch creation from snapshots
 - Comparison with expected A/D operations
 - Usage error handling
 
-### test_apply.bats
+### test\_apply.bats
 Tests for the apply script:
 - Single patch application
 - Sequential patch application
@@ -56,7 +56,7 @@ Larger tests reuse the existing `test/` directory files (snapshot1.nq, patch-1-t
 
 ## Requirements
 
-- Bats: `npm install -g bats-core` or see [bats-core/bats](https://github.com/bats-core/bats-core)
+- Bats: Install via e.g. `apt-get install -y bats` or `npm install -g bats-core` or see [bats-core/bats](https://github.com/bats-core/bats-core).
 
 ## Adding New Tests
 

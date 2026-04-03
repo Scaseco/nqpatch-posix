@@ -23,8 +23,8 @@ fi
 
 if [ -z "$BATS_CMD" ]; then
     echo "Error: bats is not installed."
-    echo "Install with: npm install -g bats-core"
-    echo "Or see: https://github.com/bats-core/bats-core"
+    echo "Install via: apt-get install -y bats"
+    echo "Or: npm install -g bats-core"
     exit 1
 fi
 
