@@ -79,7 +79,7 @@ Arguments starting with `@` are interpreted as factory expressions (commands to 
 ./rdfpatch-nq-apply.sh \
   '@lbzcat wikidata.nt.bz2' \
   '@lbzcat patch.rdfp.bz2' \
-  | lbzcat > result.nt.bz2
+  | lbzcat -z > result.nt.bz2
 ```
 
 **Note**:
@@ -100,7 +100,7 @@ Tested on AMD Ryzen AI Max+ 395 with Wikidata-scale data:
 ./rdfpatch-nq-apply.sh \
   '@lbzcat wikidata-20250723-truthy-BETA.sorted.nt.bz2' \
   '@lbzcat wikidata-20250723-to-20250918-truthy-BETA.sorted.rdfp.bz2' \
-  | pv | lbzip2 -cz > patched-20250918.nt.bz2
+  | pv | lbzip2 -z > patched-20250918.nt.bz2
 
 # 969GiB 0:41:47 [ 395MiB/s]
 # 41:47.11 total
