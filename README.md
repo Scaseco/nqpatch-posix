@@ -12,7 +12,7 @@ This project provides three shell scripts for working with RDF patch files:
 
 ## Design
 
-The tools rely on `zcat` for transparent decompression of compressed files. By default, system `zcat` only supports gzip, but installing [`zutils`](https://linux.die.net/man/1/zutils) replaces it with a configurable decompression infrastructure that handles BZip2, XZ, LZ4, and other formats.
+The tools rely on `zcat` for transparent decompression of compressed files. By default, system `zcat` only supports gzip, but installing [`zutils`](https://linux.die.net/man/1/zutils) replaces it with a configurable decompression infrastructure that handles bzip2, gzip, lzip, xz, and zstd.
 
 All tools work with byte-sorted N-Quads (e.g., `LC_ALL=C sort -u`).
 
