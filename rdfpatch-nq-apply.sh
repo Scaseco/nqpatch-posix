@@ -2,27 +2,16 @@
 set -euo pipefail
 export LC_ALL=C
 
-# Helper: Detects file type and returns the proper 'cat' command
-get_cat_cmd() {
-    local file="$1"
-    if [[ "$file" == *.bz2 ]]; then
-        echo "lbzcat \"$file\""
-    elif [[ "$file" == *.gz ]]; then
-        echo "zcat \"$file\""
-    else
-        echo "cat \"$file\""
-    fi
-}
-
-# The core logic: resolves an argument to a "factory" command string
+# Resolve an argument to a command string factory
 resolve_factory() {
     local arg="$1"
     if [[ "$arg" == @* ]]; then
-        # It's a factory command (remove the leading @)
+        # Explicit factory command (e.g. @"grep 'P31' file.nt")
         echo "${arg:1}"
     else
-        # It's a regular file; auto-detect the cat tool
-        get_cat_cmd "$arg"
+        # Transparently handle compressed or plain files via zutils
+        # -f ensures it works like 'cat' for uncompressed files
+        echo "zcat -f -- \"$arg\""
     fi
 }
 
@@ -30,7 +19,8 @@ apply_one_patch() {
     local base_cmd="$1"
     local patch_factory="$2"
 
-    # Evaluate the patch factory twice to avoid stream deadlocks
+    # We evaluate the patch factory twice to avoid the comm/sort deadlock.
+    # This allows comm and sort to pull data independently.
     comm -23 \
         <(eval "$base_cmd") \
         <(eval "$patch_factory" | sed -n 's/^D //p') \
@@ -39,13 +29,20 @@ apply_one_patch() {
         <(eval "$patch_factory" | sed -n 's/^A //p')
 }
 
-# Main initialization
+if [ $# -lt 1 ]; then
+    echo "Usage: $0 base.nt[.bz2] [patch1.rdfp[.bz2] ...]" >&2
+    exit 1
+fi
+
+# Initialize the pipeline with the base file
 CURRENT=$(resolve_factory "$1")
 
+# Sequentially wrap the command for each patch
 for arg in "${@:2}"; do
     FACTORY=$(resolve_factory "$arg")
     CURRENT="apply_one_patch \"$CURRENT\" \"$FACTORY\""
 done
 
+# Execute the final nested command
 eval "$CURRENT"
 
