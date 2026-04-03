@@ -14,7 +14,7 @@ if [ -z "$OLD" -o -z "$NEW" ]; then
   echo "⚠️  Ensure identical indent, spacing, line endings and RDF term serialization."
   echo "   Differences may be misinterpreted as data changes!"
   echo
-  echo "💡 When in doubt, canonicalize first with e.g. rapper or Apache Jena riot."
+  echo "💡 When in doubt, canonicalize first with e.g. rapper."
   echo
   echo "💡 Pro-Tip: Use process substitution for compressed/encoded input:"
   echo "  $0 <(lbzcat old.sorted.nq.bz2) <(lbzcat new.sorted.nq.bz2) > patch.sorted.rdfp"
