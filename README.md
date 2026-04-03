@@ -78,7 +78,9 @@ Arguments starting with `@` are interpreted as factory expressions (commands to 
   | lbzcat > result.nt.bz2
 ```
 
-**Note**: Process substitution `<(...)` won't work because files must be readable twice.
+**Note**:
+* (Plain) Process substitution `<(...)` won't work because files must be readable twice.
+* Process Substitution using a temporary file `=(...)` will work, but this materializes the argument as a plain text file, which may use up a lot of disk space.
 
 ## Performance
 
