@@ -16,15 +16,29 @@ fi
 # Build the command to merge the pre-sorted streams
 # We use -k2 to ignore the A/D prefix during the merge comparison
 # Sort must be stable (-s) because argument order is relevant!
-MERGE_CMD="sort -m -k2 -s"
-for arg in "$@"; do
-    FACTORY=$(resolve_factory "$arg")
-    MERGE_CMD="$MERGE_CMD <(eval \"$FACTORY\")"
-done
+#MERGE_CMD="sort -m -k2 -s"
+#for arg in "$@"; do
+#    FACTORY=$(resolve_factory "$arg")
+#    MERGE_CMD="$MERGE_CMD <(eval \"$FACTORY\")"
+#done
 
 # The State Machine:
 # Since identical triples are now adjacent, we resolve their net effect.
-eval "$MERGE_CMD" | awk '
+#eval "$MERGE_CMD" | awk '
+
+# Initialize an empty array for the arguments
+merge_args=()
+
+for arg in "$@"; do
+    FACTORY=$(resolve_factory "$arg")
+    # Add the process substitution directly to the array
+    # Note: We use 'eval' only for the factory string, not the whole command
+    merge_args+=( <(eval "$FACTORY") )
+done
+
+# Run sort directly using the array expansion
+# This is much safer than building a string for eval
+sort -m -k2 -s "${merge_args[@]}" |
     function emit() {
         if (state == "A") print "A " last_triple
         if (state == "D") print "D " last_triple
