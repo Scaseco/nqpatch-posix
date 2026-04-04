@@ -118,13 +118,16 @@ Run with the wrapper script using `create`, `apply`, or `merge` commands:
 
 ```bash
 # Create a patch from two files
-docker run --rm -u "$(id -u):$(id -g)" -v $(pwd):/data rdfpatch create old.nq new.nq > patch.rdfp
+docker run --rm -u "$(id -u):$(id -g)" -v "$(pwd):/data" aksw/rdfpatch-nq-posix \
+  create old.nq new.nq > patch.rdfp
 
 # Apply a patch
-docker run --rm -u "$(id -u):$(id -g)" -v $(pwd):/data rdfpatch apply old.nq patch.rdfp > new.nq
+docker run --rm -u "$(id -u):$(id -g)" -v "$(pwd):/data" aksw/rdfpatch-nq-posix \
+  apply old.nq patch.rdfp > new.nq
 
 # Merge multiple patches
-docker run --rm -u "$(id -u):$(id -g)" -v $(pwd):/data rdfpatch merge patch1.rdfp patch2.rdfp > merged.rdfp
+docker run --rm -u "$(id -u):$(id -g)" -v "$(pwd):/data" aksw/rdfpatch-nq-posix \
+  merge patch1.rdfp patch2.rdfp > merged.rdfp
 ```
 
 ## Performance

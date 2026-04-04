@@ -1,7 +1,5 @@
 FROM alpine:latest
 
-ENV APP_UID=0 APP_GID=0
-
 RUN apk add --no-cache zutils bash \
   && mkdir -p /rdfpatch /data
 
