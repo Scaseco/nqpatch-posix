@@ -25,7 +25,7 @@ fi
 MAX_FDS=$(ulimit -n)
 SAFE_BATCH=$(( MAX_FDS - 20 ))
 
-# === Build MERGE_CMD: include base as "A q", then patches ===
+# Build MERGE_CMD: include base as "A q", then patches
 MERGE_CMD="sort -m -s -k2 --batch-size=$SAFE_BATCH"
 
 # Base: wrap in <(...) and tag with "A "
@@ -37,21 +37,31 @@ for arg in "${PATCHES[@]}"; do
     MERGE_CMD="$MERGE_CMD <($FACTORY)"
 done
 
-# Apply patches by treating base as adds, then reusing merge logic ===
+# Apply patches by treating base as adds, then reusing merge logic
 eval "$MERGE_CMD" | awk '
     function emit() {
-        if (state == "A") print last_triple
+        if (state == "A") print last_quad
     }
 
     {
         op = $1
-        triple = substr($0, 3)
+        if (op != "A" && op != "D" && op != "") {
+            print "ERROR: line " NR ": " $0 > "/dev/stderr"
+            exit 1
+        }
 
-        if (triple != last_triple) {
+        # Extract everything after "A " or "D "
+        quad = substr($0, 3)
+        if (quad != last_quad) {
             emit()
             state = op
-            last_triple = triple
+            last_quad = quad
         } else {
+            # Logic: If we have an existing state and a new op:
+            # A + D = (nothing)
+            # D + A = (nothing) 
+            # A + A = A (duplicate add, shouldnt happen but handled)
+            # D + D = D (duplicate delete)
             if (state == "A" && op == "D") state = ""
             else if (state == "D" && op == "A") state = ""
             else if (state == "") state = op

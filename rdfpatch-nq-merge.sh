@@ -35,19 +35,23 @@ done
 # We resolve their net effect.
 eval "$MERGE_CMD" | awk '
     function emit() {
-        if (state == "A") print "A " last_triple
-        if (state == "D") print "D " last_triple
+        if (state == "A") print "A " last_quad
+        else if (state == "D") print "D " last_quad
     }
 
     {
         op = $1
-        # Extract everything after "A " or "D "
-        triple = substr($0, 3)
+        if (op != "A" && op != "D" && op != "") {
+            print "ERROR: line " NR ": [" $0 "]" > "/dev/stderr"
+            exit 1
+        }
 
-        if (triple != last_triple) {
+        # Extract everything after "A " or "D "
+        quad = substr($0, 3)
+        if (quad != last_quad) {
             emit()
             state = op
-            last_triple = triple
+            last_quad = quad
         } else {
             # Logic: If we have an existing state and a new op:
             # A + D = (nothing)
