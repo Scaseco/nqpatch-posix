@@ -1,4 +1,4 @@
-FROM alpine:3.20
+FROM alpine:latest
 
 ENV APP_UID=0 APP_GID=0
 
