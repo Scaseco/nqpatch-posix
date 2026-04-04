@@ -38,7 +38,7 @@ done
 
 # Run sort directly using the array expansion
 # This is much safer than building a string for eval
-sort -m -k2 -s "${merge_args[@]}" |
+sort -m -k2 -s "${merge_args[@]}" | awk '
     function emit() {
         if (state == "A") print "A " last_triple
         if (state == "D") print "D " last_triple
