@@ -1,7 +1,7 @@
 # RDFPatch NQ Posix
 
 Command-line tools for efficiently patching large sorted N-Quads files.
-Implemented as bash scripts using the POSIX tooling comm, awk, sort, and sed.
+Implemented as bash scripts backed by the POSIX tooling comm, awk, sort, and sed.
 
 ## Project Status
 
