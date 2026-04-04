@@ -190,6 +190,16 @@ See `bats-tests/TESTING.md` for details on the test infrastructure.
 - ⚠️ Byte-level diff requires identical whitespace, encoding, and line endings
 - ⚠️ Patches must be applied to the same base file they were created from
 
+## Star History
+
+<a href="https://www.star-history.com/?repos=Scaseco%2Frdfpatch-nq-posix&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=Scaseco/rdfpatch-nq-posix&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=Scaseco/rdfpatch-nq-posix&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=Scaseco/rdfpatch-nq-posix&type=date&legend=top-left" />
+ </picture>
+</a>
+
 ## License
 
 This project is licensed under the Apache License, Version 2.0. See the [LICENSE](LICENSE) file for details.
