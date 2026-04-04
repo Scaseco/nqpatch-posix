@@ -1,57 +1,40 @@
 #!/bin/bash
 set -euo pipefail
-export LC_ALL=C
 
-# Resolve an argument to a command string factory
-# Use zcat -f as a universal source (works for .bz2 if zutils is installed)
-resolve_factory() {
-    [[ "$1" == @* ]] && echo "${1:1}" || echo "zcat -f -- \"$1\""
-}
+# Export to any factory expressions!
+export LC_ALL=C
 
 if [ $# -lt 1 ]; then
     echo "Usage: $0 patch1.rdfp [patch2.rdfp ...]" >&2
     exit 1
 fi
 
-# Build the command to merge the pre-sorted streams
-# We use -k2 to ignore the A/D prefix during the merge comparison
-# Sort must be stable (-s) because argument order is relevant!
-#MERGE_CMD="sort -m -k2 -s"
-#for arg in "$@"; do
-#    FACTORY=$(resolve_factory "$arg")
-#    MERGE_CMD="$MERGE_CMD <(eval \"$FACTORY\")"
-#done
+# Calculate a safe batch size based on system limits
+MAX_FDS=$(ulimit -n)
+SAFE_BATCH=$(( MAX_FDS - 20 )) # Leave room for script overhead
 
-# The State Machine:
-# Since identical triples are now adjacent, we resolve their net effect.
-#eval "$MERGE_CMD" | awk '
-
-# Array to track FDs for cleanup
-OPEN_FDS=()
-
-cleanup() {
-    # Close all tracked file descriptors
-    for fd in "${OPEN_FDS[@]}"; do
-        exec {fd}<&- 2>/dev/null || true
-    done
+# Resolves an argument to a command string factory
+# Arguments starting with '@' are interpreted as commands
+# Uses zcat -f as a universal source (works for .bz2 if zutils is installed)
+resolve_factory() {
+    [[ "$1" == @* ]] && echo "${1:1}" || printf 'zcat -f -- %q\n' "$1"
 }
-
-# Register the trap early
-trap cleanup EXIT
 
 fds=()
 for arg in "$@"; do
     FACTORY=$(resolve_factory "$arg")
-    
-    # Open the FD and track it
-    exec {fd}< <(eval "$FACTORY")
-    fds+=( "/dev/fd/$fd" )
-    OPEN_FDS+=( "$fd" )
+    # Open FD and store path
+    if exec {fd}< <(eval "$FACTORY"); then
+        fds+=( "/dev/fd/$fd" )
+        OPEN_FDS+=( "$fd" )
+    else
+        echo "Failed to open stream for $arg" >&2
+        exit 1
+    fi
 done
 
-# Run sort directly using the array expansion
-# This is much safer than building a string for eval
-sort -m -k2 -s "${fds[@]}" | awk '
+# Run sort with the dynamic batch size
+sort -m --batch-size="$SAFE_BATCH" -k2 -s "${fds[@]}" | awk '
     function emit() {
         if (state == "A") print "A " last_triple
         if (state == "D") print "D " last_triple
