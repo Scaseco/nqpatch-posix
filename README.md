@@ -37,10 +37,12 @@ All tools work on the basis of byte-sorted N-Quads (e.g., `LC_ALL=C sort -u`). T
 
 ## Installation
 
+### Local Installation
+
 No installation required. Clone and make scripts executable:
 
 ```bash
-git clone <repo>
+git clone https://github.com/Scaseco/rdfpatch-nq-posix.git
 cd rdfpatch-nq-posix
 chmod +x *.sh
 ```
@@ -85,6 +87,36 @@ Arguments starting with `@` are interpreted as factory expressions (commands to 
 **Note**:
 * (Plain) Process substitution `<(...)` won't work because files must be readable twice.
 * Process Substitution using a temporary file `=(...)` will work, but this materializes the argument as a plain text file, which may use up a lot of disk space.
+
+
+### Docker
+
+Build the Docker image:
+
+```bash
+docker build -t rdfpatch .
+```
+
+Or pull from a registry:
+
+```bash
+docker pull aksw/rdfpatch-nq-posix
+```
+
+#### Usage
+
+Run with the wrapper script using `create`, `apply`, or `merge` commands:
+
+```bash
+# Create a patch from two files
+docker run --rm -u "$(id -u):$(id -g)" -v $(pwd):/data rdfpatch create old.nq new.nq > patch.rdfp
+
+# Apply a patch
+docker run --rm -u "$(id -u):$(id -g)" -v $(pwd):/data rdfpatch apply old.nq patch.rdfp > new.nq
+
+# Merge multiple patches
+docker run --rm -u "$(id -u):$(id -g)" -v $(pwd):/data rdfpatch merge patch1.rdfp patch2.rdfp > merged.rdfp
+```
 
 ## Performance
 
