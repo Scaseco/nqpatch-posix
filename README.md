@@ -5,7 +5,7 @@ Implemented as bash scripts backed by the POSIX tooling comm, awk, sort, and sed
 
 ## Project Status
 
-- ⚠️ Experimental - functional but not battle-tested
+- Functional and tested
 
 ## Overview
 
