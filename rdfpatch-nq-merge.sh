@@ -2,6 +2,7 @@
 set -euo pipefail
 export LC_ALL=C
 
+# Resolve an argument to a command string factory
 # Use zcat -f as a universal source (works for .bz2 if zutils is installed)
 resolve_factory() {
     [[ "$1" == @* ]] && echo "${1:1}" || echo "zcat -f -- \"$1\""

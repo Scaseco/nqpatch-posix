@@ -3,16 +3,9 @@ set -euo pipefail
 export LC_ALL=C
 
 # Resolve an argument to a command string factory
+# Use zcat -f as a universal source (works for .bz2 if zutils is installed)
 resolve_factory() {
-    local arg="$1"
-    if [[ "$arg" == @* ]]; then
-        # Explicit factory command (e.g. @"grep 'P31' file.nt")
-        echo "${arg:1}"
-    else
-        # Transparently handle compressed or plain files via zutils
-        # -f ensures it works like 'cat' for uncompressed files
-        echo "zcat -f -- \"$arg\""
-    fi
+    [[ "$1" == @* ]] && echo "${1:1}" || echo "zcat -f -- \"$1\""
 }
 
 apply_one_patch() {
