@@ -17,6 +17,7 @@ resolve_factory() {
 BASE_FACTORY=$(resolve_factory "$1")
 PATCHES=("${@:2}")
 
+# Fast path if there are no patches
 if [ "${#PATCHES[@]}" -eq 0 ]; then
     eval "$BASE_FACTORY"
     exit 0
