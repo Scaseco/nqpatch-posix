@@ -1,11 +1,11 @@
-# Test Infrastructure for rdfpatch-nq-posix
+# Test Infrastructure for nqpatch-posix
 
 ## Overview
 
-This directory contains Bats (Bash Automated Testing System) test suites for the three main scripts:
-- `rdfpatch-nq-create.sh` - Create patches from N-Quads snapshots
-- `rdfpatch-nq-apply.sh` - Apply patches to N-Quads files
-- `rdfpatch-nq-merge.sh` - Merge multiple patches
+This directory contains Bats (Bash Automated Testing System) test suites for the three main scripts (via the entry point `nqpatch`):
+- `nqpatch-create.sh` - Create patches from N-Quads snapshots
+- `nqpatch-apply.sh` - Apply patches to N-Quads files
+- `nqpatch-merge.sh` - Merge multiple patches
 
 ## Running Tests
 
@@ -70,7 +70,7 @@ Example:
 @test "new test case" {
   create_patch "test.rdfp" "A x" "D y"
   
-  run bash "$SCRIPTS_DIR/../rdfpatch-nq-merge.sh" "$TEMP_DIR/test.rdfp"
+  run bash "$SCRIPTS_DIR/../nqpatch-merge.sh" "$TEMP_DIR/test.rdfp"
   [ "$status" -eq 0 ]
   [[ "$output" == *"A x"* ]]
 }

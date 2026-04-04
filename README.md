@@ -1,7 +1,7 @@
-# RDFPatch NQ Posix
+# NQPatch
 
-Command-line tools for efficiently patching large sorted N-Quads files.
-Implemented as bash scripts backed by the POSIX tooling comm, awk, sort, and sed.
+Command-line tools for efficiently patching large sorted N-Quads RDF files.
+Implemented as bash scripts backed by the POSIX tooling awk, sort, and sed.
 
 ## Project Status
 
@@ -11,9 +11,9 @@ Implemented as bash scripts backed by the POSIX tooling comm, awk, sort, and sed
 
 This project provides three shell scripts for working with RDF patch files:
 
-- **rdfpatch-nq-create.sh**: Generate a patch from two sorted N-Quads files
-- **rdfpatch-nq-apply.sh**: Apply one or more patches to a base N-Quads file  
-- **rdfpatch-nq-merge.sh**: Merge multiple patches into a single patch
+- **nqpatch-create.sh**: Generate a patch from two sorted N-Quads files
+- **nqpatch-apply.sh**: Apply one or more patches to a base N-Quads file  
+- **nqpatch-merge.sh**: Merge multiple patches into a single patch
 
 ## Design
 
@@ -33,13 +33,13 @@ Alternatively, `rdfpach-nq` supports [Factory Expressions](#factory-expressions)
 
 ```bash
 # Create a patch from two files
-./rdfpatch-nq-create.sh old.nq new.nq > patch.rdfp
+./nqpatch-create.sh old.nq new.nq > patch.rdfp
 
 # Apply a patch
-./rdfpatch-nq-apply.sh old.nq patch.rdfp > new.nq
+./nqpatch-apply.sh old.nq patch.rdfp > new.nq
 
 # Merge multiple patches
-./rdfpatch-nq-merge.sh patch1.rdfp patch2.rdfp > merged.rdfp
+./nqpatch-merge.sh patch1.rdfp patch2.rdfp > merged.rdfp
 ```
 
 **Note**: The scripts work with both plain and compressed files. For compressed files, they use `zcat` (or `zutils` if installed for multi-format support).
@@ -51,8 +51,8 @@ Alternatively, `rdfpach-nq` supports [Factory Expressions](#factory-expressions)
 No installation required. Clone and make scripts executable:
 
 ```bash
-git clone https://github.com/Scaseco/rdfpatch-nq-posix.git
-cd rdfpatch-nq-posix
+git clone https://github.com/Scaseco/nqpatch-posix.git
+cd nqpatch-posix
 chmod +x *.sh
 ```
 
@@ -61,7 +61,7 @@ chmod +x *.sh
 ### Creating Patches
 
 ```bash
-./rdfpatch-nq-create.sh old.sorted.nq new.sorted.nq > patch.rdfp
+./nqpatch-create.sh old.sorted.nq new.sorted.nq > patch.rdfp
 ```
 
 Patches use the [RDF-Delta](https://afs.github.io/rdf-delta/rdf-patch.html) format with `A` (add) and `D` (delete) prefixes.
@@ -70,16 +70,16 @@ Patches use the [RDF-Delta](https://afs.github.io/rdf-delta/rdf-patch.html) form
 
 ```bash
 # Plain or compressed files (via zcat/zutils)
-./rdfpatch-nq-apply.sh base.nq[.bz2|.xz] patch.rdfp[.bz2|.xz]
+./nqpatch-apply.sh base.nq[.bz2|.xz] patch.rdfp[.bz2|.xz]
 
 # Multiple patches (applied sequentially)
-./rdfpatch-nq-apply.sh base.nq patch1.rdfp patch2.rdfp
+./nqpatch-apply.sh base.nq patch1.rdfp patch2.rdfp
 ```
 
 ### Merging Patches
 
 ```bash
-./rdfpatch-nq-merge.sh patch1.rdfp patch2.rdfp > merged.rdfp
+./nqpatch-merge.sh patch1.rdfp patch2.rdfp > merged.rdfp
 ```
 
 ## Factory Expressions
@@ -87,7 +87,7 @@ Patches use the [RDF-Delta](https://afs.github.io/rdf-delta/rdf-patch.html) form
 Arguments starting with `@` are interpreted as factory expressions (commands to be evaluated):
 
 ```bash
-./rdfpatch-nq-apply.sh \
+./nqpatch-apply.sh \
   '@lbzcat wikidata.nt.bz2' \
   '@lbzcat patch.rdfp.bz2' \
   | lbzcat -z > result.nt.bz2
@@ -103,13 +103,13 @@ Arguments starting with `@` are interpreted as factory expressions (commands to 
 Build the Docker image:
 
 ```bash
-docker build -t rdfpatch .
+docker build -t aksw/nqpatch .
 ```
 
 Or pull from a registry:
 
 ```bash
-docker pull aksw/rdfpatch-nq-posix
+docker pull aksw/nqpatch
 ```
 
 #### Usage
@@ -118,15 +118,15 @@ Run with the wrapper script using `create`, `apply`, or `merge` commands:
 
 ```bash
 # Create a patch from two files
-docker run --rm -u "$(id -u):$(id -g)" -v "$(pwd):/data" aksw/rdfpatch-nq-posix \
+docker run --rm -u "$(id -u):$(id -g)" -v "$(pwd):/data" aksw/nqpatch-posix \
   create old.nq new.nq > patch.rdfp
 
 # Apply a patch
-docker run --rm -u "$(id -u):$(id -g)" -v "$(pwd):/data" aksw/rdfpatch-nq-posix \
+docker run --rm -u "$(id -u):$(id -g)" -v "$(pwd):/data" aksw/nqpatch-posix \
   apply old.nq patch.rdfp > new.nq
 
 # Merge multiple patches
-docker run --rm -u "$(id -u):$(id -g)" -v "$(pwd):/data" aksw/rdfpatch-nq-posix \
+docker run --rm -u "$(id -u):$(id -g)" -v "$(pwd):/data" aksw/nqpatch-posix \
   merge patch1.rdfp patch2.rdfp > merged.rdfp
 ```
 
@@ -141,7 +141,7 @@ Tested on AMD Ryzen AI Max+ 395 with Wikidata-scale data:
 <summary>Detailed Experiment Output</summary>
 
 ```bash
-./rdfpatch-nq-apply.sh \
+./nqpatch-apply.sh \
   '@lbzcat wikidata-20250723-truthy-BETA.sorted.nt.bz2' \
   '@lbzcat wikidata-20250723-to-20250918-truthy-BETA.sorted.rdfp.bz2' \
   | pv | lbzip2 -z > patched-20250918.nt.bz2
@@ -170,11 +170,11 @@ See `test/` directory for toy examples:
 
 ```bash
 # Apply merged patch to snapshot1
-./rdfpatch-nq-apply.sh test/snapshot1.nq test/patch-1-to-2.rdfp test/patch-2-to-3.rdfp
+./nqpatch-apply.sh test/snapshot1.nq test/patch-1-to-2.rdfp test/patch-2-to-3.rdfp
 
 # Or merge first, then apply
-./rdfpatch-nq-apply.sh test/snapshot1.nq \
-  =(./rdfpatch-nq-merge.sh test/patch-1-to-2.rdfp test/patch-2-to-3.rdfp)
+./nqpatch-apply.sh test/snapshot1.nq \
+  =(./nqpatch-merge.sh test/patch-1-to-2.rdfp test/patch-2-to-3.rdfp)
 ```
 
 ## Testing
@@ -195,11 +195,11 @@ See `bats-tests/TESTING.md` for details on the test infrastructure.
 
 ## Star History
 
-<a href="https://www.star-history.com/?repos=Scaseco%2Frdfpatch-nq-posix&type=date&legend=top-left">
+<a href="https://www.star-history.com/?repos=Scaseco%2Fnqpatch-posix&type=date&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=Scaseco/rdfpatch-nq-posix&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=Scaseco/rdfpatch-nq-posix&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=Scaseco/rdfpatch-nq-posix&type=date&legend=top-left" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=Scaseco/nqpatch-posix&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=Scaseco/nqpatch-posix&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=Scaseco/nqpatch-posix&type=date&legend=top-left" />
  </picture>
 </a>
 

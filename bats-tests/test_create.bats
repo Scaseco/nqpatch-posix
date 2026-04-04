@@ -26,7 +26,7 @@ create_patch() {
   create_file "old.nq" "b" "c" "d"
   create_file "new.nq" "a" "c" "e"
   
-  run bash "$SCRIPTS_DIR/../rdfpatch-nq-create.sh" \
+  run bash "$SCRIPTS_DIR/../nqpatch" "create" \
     "$TEMP_DIR/old.nq" \
     "$TEMP_DIR/new.nq"
   
@@ -41,7 +41,7 @@ create_patch() {
   create_file "old.nq" "a" "c" "e"
   create_file "new.nq" "e" "f"
   
-  run bash "$SCRIPTS_DIR/../rdfpatch-nq-create.sh" \
+  run bash "$SCRIPTS_DIR/../nqpatch" "create" \
     "$TEMP_DIR/old.nq" \
     "$TEMP_DIR/new.nq"
   
@@ -52,14 +52,14 @@ create_patch() {
 }
 
 @test "create: no arguments shows usage" {
-  run bash "$SCRIPTS_DIR/../rdfpatch-nq-create.sh"
+  run bash "$SCRIPTS_DIR/../nqpatch" "create"
   
   [ "$status" -eq 1 ]
   echo "$output" | grep -q "Usage:"
 }
 
 @test "create: missing second argument shows usage" {
-  run bash "$SCRIPTS_DIR/../rdfpatch-nq-create.sh" "/nonexistent/file.nq"
+  run bash "$SCRIPTS_DIR/../nqpatch" "create" "/nonexistent/file.nq"
   
   [ "$status" -eq 1 ]
   echo "$output" | grep -q "Usage:"

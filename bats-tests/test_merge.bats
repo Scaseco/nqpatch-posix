@@ -21,7 +21,7 @@ create_patch() {
   create_patch "p2.rdfp" "D x"
   create_patch "p3.rdfp" "A x"
   
-  run bash "$SCRIPTS_DIR/../rdfpatch-nq-merge.sh" \
+  run bash "$SCRIPTS_DIR/../nqpatch" "merge" \
     "$TEMP_DIR/p1.rdfp" \
     "$TEMP_DIR/p2.rdfp" \
     "$TEMP_DIR/p3.rdfp"
@@ -37,7 +37,7 @@ create_patch() {
   create_patch "p4.rdfp" "D x"
   create_patch "p5.rdfp" "A x"
   
-  run bash "$SCRIPTS_DIR/../rdfpatch-nq-merge.sh" \
+  run bash "$SCRIPTS_DIR/../nqpatch" "merge" \
     "$TEMP_DIR/p1.rdfp" \
     "$TEMP_DIR/p2.rdfp" \
     "$TEMP_DIR/p3.rdfp" \
@@ -56,7 +56,7 @@ create_patch() {
   create_patch "p5.rdfp" "A x"
   create_patch "p6.rdfp" "D x"
   
-  run bash "$SCRIPTS_DIR/../rdfpatch-nq-merge.sh" \
+  run bash "$SCRIPTS_DIR/../nqpatch" "merge" \
     "$TEMP_DIR/p1.rdfp" \
     "$TEMP_DIR/p2.rdfp" \
     "$TEMP_DIR/p3.rdfp" \
@@ -73,7 +73,7 @@ create_patch() {
   create_patch "p2.rdfp" "D a" "A c"
   create_patch "p3.rdfp" "A b" "D c"
   
-  run bash "$SCRIPTS_DIR/../rdfpatch-nq-merge.sh" \
+  run bash "$SCRIPTS_DIR/../nqpatch" "merge" \
     "$TEMP_DIR/p1.rdfp" \
     "$TEMP_DIR/p2.rdfp" \
     "$TEMP_DIR/p3.rdfp"
@@ -84,7 +84,7 @@ create_patch() {
 }
 
 @test "merge: existing test patches produce expected result" {
-  run bash "$SCRIPTS_DIR/../rdfpatch-nq-merge.sh" \
+  run bash "$SCRIPTS_DIR/../nqpatch" "merge" \
     "$SCRIPTS_DIR/../test/patch-1-to-2.rdfp" \
     "$SCRIPTS_DIR/../test/patch-2-to-3.rdfp"
   
@@ -100,7 +100,7 @@ create_patch() {
   create_patch "empty1.rdfp" ""
   create_patch "empty2.rdfp" ""
   
-  run bash "$SCRIPTS_DIR/../rdfpatch-nq-merge.sh" \
+  run bash "$SCRIPTS_DIR/../nqpatch" "merge" \
     "$TEMP_DIR/empty1.rdfp" \
     "$TEMP_DIR/empty2.rdfp"
   
@@ -111,7 +111,7 @@ create_patch() {
 @test "merge: single patch" {
   create_patch "single.rdfp" "A x" "D y"
   
-  run bash "$SCRIPTS_DIR/../rdfpatch-nq-merge.sh" "$TEMP_DIR/single.rdfp"
+  run bash "$SCRIPTS_DIR/../nqpatch" "merge" "$TEMP_DIR/single.rdfp"
   
   [ "$status" -eq 0 ]
   echo "$output" | grep -q "A x"
@@ -119,7 +119,7 @@ create_patch() {
 }
 
 @test "merge: no arguments shows usage" {
-  run bash "$SCRIPTS_DIR/../rdfpatch-nq-merge.sh"
+  run bash "$SCRIPTS_DIR/../nqpatch" "merge"
   
   [ "$status" -eq 1 ]
   echo "$output" | grep -q "Usage:"

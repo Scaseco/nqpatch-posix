@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Test runner for rdfpatch-nq-posix
+# Test runner for nqpatch-posix
 # Usage: ./run-tests.sh
 
 set -euo pipefail

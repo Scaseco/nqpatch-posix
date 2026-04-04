@@ -1,14 +1,14 @@
 FROM alpine:latest
 
 RUN apk add --no-cache zutils bash \
-  && mkdir -p /rdfpatch /data
+  && mkdir -p /nqpatch /data
 
-COPY rdfpatch-nq-*.sh /rdfpatch/
-COPY entrypoint.sh /rdfpatch/
+COPY nqpatch-*.sh /nqpatch/
+COPY nqpatch /nqpatch/
 
-RUN chmod +x /rdfpatch/*.sh
+RUN chmod +x /nqpatch/*.sh && chmod +x /nqpatch/nqpatch
 
 WORKDIR /data
 VOLUME /data
 
-ENTRYPOINT ["/rdfpatch/entrypoint.sh"]
+ENTRYPOINT ["/nqpatch/nqpatch"]

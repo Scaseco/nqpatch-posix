@@ -26,7 +26,7 @@ create_patch() {
   create_file "base.nq" "b" "c" "d"
   create_patch "patch.rdfp" "A a" "D b" "D d" "A e"
   
-  run bash "$SCRIPTS_DIR/../rdfpatch-nq-apply.sh" \
+  run bash "$SCRIPTS_DIR/../nqpatch" "apply" \
     "$TEMP_DIR/base.nq" \
     "$TEMP_DIR/patch.rdfp"
   
@@ -39,7 +39,7 @@ create_patch() {
   create_patch "patch1.rdfp" "A a" "D b" "D d" "A e"
   create_patch "patch2.rdfp" "D a" "D c" "A f"
   
-  run bash "$SCRIPTS_DIR/../rdfpatch-nq-apply.sh" \
+  run bash "$SCRIPTS_DIR/../nqpatch" "apply" \
     "$TEMP_DIR/base.nq" \
     "$TEMP_DIR/patch1.rdfp" \
     "$TEMP_DIR/patch2.rdfp"
@@ -54,7 +54,7 @@ create_patch() {
   create_patch "patch2.rdfp" "D a" "D c" "A f"
   
   # Apply sequentially
-  run bash "$SCRIPTS_DIR/../rdfpatch-nq-apply.sh" \
+  run bash "$SCRIPTS_DIR/../nqpatch" "apply" \
     "$TEMP_DIR/base.nq" \
     "$TEMP_DIR/patch1.rdfp" \
     "$TEMP_DIR/patch2.rdfp"
@@ -62,7 +62,7 @@ create_patch() {
   sequential_result="$output"
   
   # Merge then apply
-  run bash "$SCRIPTS_DIR/../rdfpatch-nq-merge.sh" \
+  run bash "$SCRIPTS_DIR/../nqpatch" "merge" \
     "$TEMP_DIR/patch1.rdfp" \
     "$TEMP_DIR/patch2.rdfp"
   [ "$status" -eq 0 ]
@@ -70,7 +70,7 @@ create_patch() {
   
   echo "$merged_patch" > "$TEMP_DIR/merged.rdfp"
   
-  run bash "$SCRIPTS_DIR/../rdfpatch-nq-apply.sh" \
+  run bash "$SCRIPTS_DIR/../nqpatch" "apply" \
     "$TEMP_DIR/base.nq" \
     "$TEMP_DIR/merged.rdfp"
   [ "$status" -eq 0 ]
@@ -85,7 +85,7 @@ create_patch() {
   create_patch "p2.rdfp" "D x"
   create_patch "p3.rdfp" "A x"
   
-  run bash "$SCRIPTS_DIR/../rdfpatch-nq-apply.sh" \
+  run bash "$SCRIPTS_DIR/../nqpatch" "apply" \
     "$TEMP_DIR/base.nq" \
     "$TEMP_DIR/p1.rdfp" \
     "$TEMP_DIR/p2.rdfp" \
@@ -97,7 +97,7 @@ create_patch() {
 }
 
 @test "apply: no base file shows usage" {
-  run bash "$SCRIPTS_DIR/../rdfpatch-nq-apply.sh"
+  run bash "$SCRIPTS_DIR/../nqpatch" "apply"
   
   [ "$status" -eq 1 ]
   echo "$output" | grep -q "Usage:"

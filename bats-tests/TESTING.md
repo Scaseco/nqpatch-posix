@@ -1,11 +1,11 @@
-# Test Infrastructure for rdfpatch-nq-posix
+# Test Infrastructure for nqpatch-posix
 
 ## Overview
 
 This directory contains Bats (Bash Automated Testing System) test suites for the three main scripts:
-- `rdfpatch-nq-create.sh` - Create patches from N-Quads snapshots
-- `rdfpatch-nq-apply.sh` - Apply patches to N-Quads files
-- `rdfpatch-nq-merge.sh` - Merge multiple patches
+- `nqpatch-create.sh` - Create patches from N-Quads snapshots
+- `nqpatch-apply.sh` - Apply patches to N-Quads files
+- `nqpatch-merge.sh` - Merge multiple patches
 
 ## Test Files
 
@@ -84,7 +84,7 @@ Example:
 @test "new test case" {
   create_patch "test.rdfp" "A x" "D y"
   
-  run bash "$SCRIPTS_DIR/../rdfpatch-nq-merge.sh" "$TEMP_DIR/test.rdfp"
+  run bash "$SCRIPTS_DIR/../nqpatch-merge.sh" "$TEMP_DIR/test.rdfp"
   [ "$status" -eq 0 ]
   echo "$output" | grep -q "A x"
 }
@@ -92,10 +92,10 @@ Example:
 
 ## Bug Fixes
 
-### Fixed: rdfpatch-nq-apply.sh (line 40-46)
+### Fixed: nqpatch-apply.sh (line 40-46)
 The script had a quoting issue when building command strings with multiple patches. The fix uses `printf '%q'` to properly escape arguments for `eval`.
 
-### Fixed: rdfpatch-nq-merge.sh (line 17)
+### Fixed: nqpatch-merge.sh (line 17)
 Added `-s` flag to `sort -m` for stable sorting, preserving the relative order of operations on the same triple across different patch files.
 
 ## CI Integration
