@@ -114,21 +114,26 @@ docker pull aksw/nqpatch
 
 #### Usage
 
-Run with the wrapper script using `create`, `apply`, or `merge` commands:
+⚠️ Make sure to set `--log-driver=none` otherwise all data will end up in the docker logs.
 
+Run with the wrapper script using `create`, `apply`, or `merge` commands:
+docker run --rm 
 ```bash
 # Create a patch from two files
-docker run --rm -u "$(id -u):$(id -g)" -v "$(pwd):/data" aksw/nqpatch-posix \
+docker run --rm --log-driver=none -i -v "$(pwd):/data" aksw/nqpatch-posix \
   create old.nq new.nq > patch.rdfp
 
 # Apply a patch
-docker run --rm -u "$(id -u):$(id -g)" -v "$(pwd):/data" aksw/nqpatch-posix \
+docker run --rm --log-driver=none -i -v "$(pwd):/data" aksw/nqpatch-posix \
   apply old.nq patch.rdfp > new.nq
 
 # Merge multiple patches
-docker run --rm -u "$(id -u):$(id -g)" -v "$(pwd):/data" aksw/nqpatch-posix \
+docker run --rm --log-driver=none -i -v "$(pwd):/data" aksw/nqpatch-posix \
   merge patch1.rdfp patch2.rdfp > merged.rdfp
 ```
+
+In case you write to files inside the `/data` volume, set the user:group in order for those files get the right ownership. For the current user this is typically done with:
+`docker run -u "$(id -u):$(id -g) [...]"`
 
 ## Performance
 
