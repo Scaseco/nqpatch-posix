@@ -114,10 +114,13 @@ docker pull aksw/nqpatch
 
 #### Usage
 
-⚠️ Make sure to set `--log-driver=none` otherwise all data will end up in the docker logs.
+⚠️ Make sure to specify `--log-driver=none` \
+Otherwise, all data from stdout will also be written to the docker logs.
+When processing large amounts of data, this extra logging is a severe
+performance hit and can easily consume up all remaining disk space.
 
 Run with the wrapper script using `create`, `apply`, or `merge` commands:
-docker run --rm 
+
 ```bash
 # Create a patch from two files
 docker run --rm --log-driver=none -i -v "$(pwd):/data" aksw/nqpatch-posix \
