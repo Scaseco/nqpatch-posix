@@ -1,7 +1,7 @@
 # NQPatch
 
 Command-line tools for efficiently patching large sorted N-Quads RDF files.
-Implemented as bash scripts backed by the POSIX tooling awk, sort, and sed.
+Implemented as bash scripts backed by the POSIX tooling awk, sort, comm, and sed.
 
 ## Project Status
 
