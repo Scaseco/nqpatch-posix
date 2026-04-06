@@ -3,7 +3,7 @@
 Command-line tools for efficiently patching large sorted N-Quads RDF files.
 Implemented as bash scripts backed by the POSIX tooling awk, sort, comm, and sed.
 
-Check out the sorted Wikidata truthy dumps and diffs that can be process with the tooling of this repo: [hf.co/datasets/Aklakan/wikidata-sorted-nquads-and-diffs](https://huggingface.co/datasets/Aklakan/wikidata-sorted-nquads-and-diffs).
+As a demo, check out the sorted Wikidata truthy dumps and diffs that can be process with the tooling of this repo: [hf.co/datasets/Aklakan/wikidata-sorted-nquads-and-diffs](https://huggingface.co/datasets/Aklakan/wikidata-sorted-nquads-and-diffs).
 
 ## Project Status
 
