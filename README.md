@@ -3,17 +3,29 @@
 Command-line tools for efficiently patching large sorted N-Quads RDF files.
 Implemented as bash scripts backed by the POSIX tooling awk, sort, and sed.
 
+## Tracking Layer
+
+NQPatch includes a tracking layer to manage patch relationships using SHA1 checksums:
+
+- **nqpatch track**: Create tracking metadata for patches
+  - Creates `.sha1` files for snapshots and patches (hash-only format)
+  - Creates `.rel` files linking patches to their from/to snapshots
+  - Automatically generates patches if not provided
+
+See the individual script documentation for usage details.
+
 ## Project Status
 
 - Functional and tested
 
 ## Overview
 
-This project provides three shell scripts for working with RDF patch files:
+This project provides four shell scripts for working with RDF patch files:
 
 - **nqpatch-create.sh**: Generate a patch from two sorted N-Quads files
 - **nqpatch-apply.sh**: Apply one or more patches to a base N-Quads file  
 - **nqpatch-merge.sh**: Merge multiple patches into a single patch
+- **nqpatch-track-create.sh**: Create tracking metadata for patches (creates .sha1 and .rel files)
 
 ## Design
 
@@ -40,6 +52,9 @@ Alternatively, `rdfpach-nq` supports [Factory Expressions](#factory-expressions)
 
 # Merge multiple patches
 ./nqpatch-merge.sh patch1.rdfp patch2.rdfp > merged.rdfp
+
+# Create tracking metadata (creates .sha1 and .rel files)
+./nqpatch track old.nq new.nq [patch.rdfp]
 ```
 
 **Note**: The scripts work with both plain and compressed files. For compressed files, they use `zcat` (or `zutils` if installed for multi-format support).
@@ -56,12 +71,16 @@ cd nqpatch-posix
 chmod +x *.sh
 ```
 
+The `nqpatch` wrapper script provides convenient access to all commands.
+
 ## Usage
 
 ### Creating Patches
 
 ```bash
 ./nqpatch-create.sh old.sorted.nq new.sorted.nq > patch.rdfp
+# Or using the wrapper:
+./nqpatch create old.sorted.nq new.sorted.nq > patch.rdfp
 ```
 
 Patches use the [RDF-Delta](https://afs.github.io/rdf-delta/rdf-patch.html) format with `A` (add) and `D` (delete) prefixes.
@@ -71,6 +90,8 @@ Patches use the [RDF-Delta](https://afs.github.io/rdf-delta/rdf-patch.html) form
 ```bash
 # Plain or compressed files (via zcat/zutils)
 ./nqpatch-apply.sh base.nq[.bz2|.xz] patch.rdfp[.bz2|.xz]
+# Or using the wrapper:
+./nqpatch apply base.nq patch.rdfp
 
 # Multiple patches (applied sequentially)
 ./nqpatch-apply.sh base.nq patch1.rdfp patch2.rdfp
@@ -80,7 +101,24 @@ Patches use the [RDF-Delta](https://afs.github.io/rdf-delta/rdf-patch.html) form
 
 ```bash
 ./nqpatch-merge.sh patch1.rdfp patch2.rdfp > merged.rdfp
+# Or using the wrapper:
+./nqpatch merge patch1.rdfp patch2.rdfp
 ```
+
+### Tracking Patches
+
+```bash
+# Create tracking metadata with explicit patch
+./nqpatch track old.nq new.nq patch.rdfp
+
+# Create tracking metadata with auto-generated patch
+./nqpatch track old.nq new.nq
+```
+
+The tracking layer creates:
+- `old.sha1`, `new.sha1` - SHA1 hashes of snapshot files
+- `patch.sha1` - SHA1 hash of the patch file
+- `patch.rel` - Lineage file with format: `<from-sha1> <to-sha1>`
 
 ## Factory Expressions
 
@@ -97,6 +135,20 @@ Arguments starting with `@` are interpreted as factory expressions (commands to 
 * (Plain) Process substitution `<(...)` should work but will currently be fed into an extra `zcat`. Patch files only need to be read once.
 * Process Substitution using a temporary file `=(...)` will work, but this materializes the argument as a plain text file, which may use up a lot of disk space.
 
+
+### Tracking Layer Design
+
+The tracking layer uses SHA1 hashes to establish relationships between snapshots and patches:
+
+- **Hash files** (`.sha1`): Contain only the SHA1 hash, portable across systems
+- **Lineage files** (`.rel`): Contain `from-sha1 to-sha1` space-separated on one line
+- **No centralized registry**: Each repository maintains its own `.sha1` and `.rel` files
+- **Move-resistant**: Files can be relocated; hash relationships persist as long as hash files move with them
+
+Future tools can use these files to:
+- Find patches for a given snapshot
+- Verify patch integrity
+- Optimize patch chains vs full snapshot downloads
 
 ### Docker
 

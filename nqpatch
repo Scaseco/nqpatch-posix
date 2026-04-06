@@ -6,6 +6,7 @@ case "$1" in
   create) shift; exec "${SCRIPT_DIR}/nqpatch-create.sh" "$@" ;;
   apply)  shift; exec "${SCRIPT_DIR}/nqpatch-apply.sh" "$@" ;;
   merge)  shift; exec "${SCRIPT_DIR}/nqpatch-merge.sh" "$@" ;;
-  *)      echo "Usage: $0 {create|apply|merge} [args...]" >&2; exit 1 ;;
+  track)  shift; exec "${SCRIPT_DIR}/nqpatch-track-create.sh" "$@" ;;
+  *)      echo "Usage: $0 {create|apply|merge|track} [args...]" >&2; exit 1 ;;
 esac
 
