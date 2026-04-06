@@ -2,20 +2,49 @@
 set -euo pipefail
 
 # nqpatch track create: Create tracking metadata for patches
-# Usage: nqpatch track create old.nq new.nq [patch.rdfp]
+# Usage: nqpatch track create old.nq new.nq [patch.rdfp[.gz|.bz2]]
 #
 # Creates:
 #   old.sha1, new.sha1, patch.sha1 (hash files)
 #   patch.rel (lineage file: from-sha1 to-sha1)
+#
+# Patch output compression is auto-detected from file extension:
+#   .gz  -> gzip
+#   .bz2 -> bzip2
+#   .xz  -> xz
+#   .zst -> zstd
+#   (none) -> plain text
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Detect compression tool from file extension
+detect_compressor() {
+    local file="$1"
+    case "$file" in
+        *.gz)  echo "gzip" ;;
+        *.bz2) echo "bzip2" ;;
+        *.xz)  echo "xz" ;;
+        *.zst) echo "zstd" ;;
+        *)     echo "cat" ;;
+    esac
+}
+
+# Detect decompressor from file extension (for reading)
+detect_decompressor() {
+    local file="$1"
+    case "$file" in
+        *.gz|*.bz2|*.xz|*.zst) echo "zcat" ;;
+        *)                     echo "cat" ;;
+    esac
+}
+
 # Parse arguments
 if [ $# -lt 2 ]; then
-    echo "Usage: $0 old.nq new.nq [patch.rdfp]" >&2
+    echo "Usage: $0 old.nq new.nq [patch.rdfp[.gz|.bz2]]" >&2
     echo "" >&2
     echo "Create tracking metadata for a patch operation." >&2
-    echo "If patch.rdfp is not provided, it will be generated automatically." >&2
+    echo "If patch is not provided, it will be generated automatically." >&2
+    echo "Compression is auto-detected from patch filename extension." >&2
     exit 1
 fi
 
@@ -55,7 +84,8 @@ if [ -n "$PATCH_FILE" ]; then
     else
         # Verify patch is valid by checking it can be processed
         # (just check it has A/D prefixes)
-        if ! head -n1 "$PATCH_FILE" | grep -qE '^[AD] '; then
+        DECOMPRESSOR=$(detect_decompressor "$PATCH_FILE")
+        if ! $DECOMPRESSOR "$PATCH_FILE" 2>/dev/null | head -n1 | grep -qE '^[AD] '; then
             echo "Error: invalid patch format (must start with A or D): $PATCH_FILE" >&2
             exit 1
         fi
@@ -66,9 +96,31 @@ else
     OLD_BASE=$(basename "$OLD_FILE" .nq)
     NEW_BASE=$(basename "$NEW_FILE" .nq)
     PATCH_DIR=$(dirname "$OLD_FILE")
-    PATCH_FILE="$PATCH_DIR/patch-${OLD_BASE}-to-${NEW_BASE}.rdfp"
-    "$SCRIPT_DIR/nqpatch-create.sh" "$OLD_FILE" "$NEW_FILE" > "$PATCH_FILE"
-    # Note: temp patch file will remain; caller should clean up if needed
+    # Preserve compression extension from inputs if present
+    OLD_EXT=""
+    case "$OLD_FILE" in
+        *.gz)  OLD_EXT=".gz" ;;
+        *.bz2) OLD_EXT=".bz2" ;;
+        *.xz)  OLD_EXT=".xz" ;;
+        *.zst) OLD_EXT=".zst" ;;
+    esac
+    NEW_EXT=""
+    case "$NEW_FILE" in
+        *.gz)  NEW_EXT=".gz" ;;
+        *.bz2) NEW_EXT=".bz2" ;;
+        *.xz)  NEW_EXT=".xz" ;;
+        *.zst) NEW_EXT=".zst" ;;
+    esac
+    # If both have same extension, use it; otherwise use plain
+    if [ "$OLD_EXT" = "$NEW_EXT" ] && [ -n "$OLD_EXT" ]; then
+        PATCH_EXT="$OLD_EXT"
+    else
+        PATCH_EXT=""
+    fi
+    PATCH_FILE="$PATCH_DIR/patch-${OLD_BASE}-to-${NEW_BASE}.rdfp${PATCH_EXT}"
+    COMPRESSOR=$(detect_compressor "$PATCH_FILE")
+    "$SCRIPT_DIR/nqpatch-create.sh" "$OLD_FILE" "$NEW_FILE" | $COMPRESSOR > "$PATCH_FILE"
+    # Note: patch file will remain; caller should clean up if needed
 fi
 
 # Create patch.sha1

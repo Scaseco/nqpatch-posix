@@ -7,10 +7,11 @@ Implemented as bash scripts backed by the POSIX tooling awk, sort, and sed.
 
 NQPatch includes a tracking layer to manage patch relationships using SHA1 checksums:
 
-- **nqpatch track**: Create tracking metadata for patches
+- **nqpatch track create**: Create tracking metadata for patches
   - Creates `.sha1` files for snapshots and patches (hash-only format)
   - Creates `.rel` files linking patches to their from/to snapshots
   - Automatically generates patches if not provided
+  - Supports compressed patch output (.gz, .bz2, .xz, .zst)
 
 See the individual script documentation for usage details.
 
@@ -54,7 +55,7 @@ Alternatively, `rdfpach-nq` supports [Factory Expressions](#factory-expressions)
 ./nqpatch-merge.sh patch1.rdfp patch2.rdfp > merged.rdfp
 
 # Create tracking metadata (creates .sha1 and .rel files)
-./nqpatch track old.nq new.nq [patch.rdfp]
+./nqpatch track create old.nq new.nq [patch.rdfp[.gz|.bz2|.xz|.zst]]
 ```
 
 **Note**: The scripts work with both plain and compressed files. For compressed files, they use `zcat` (or `zutils` if installed for multi-format support).
@@ -109,10 +110,13 @@ Patches use the [RDF-Delta](https://afs.github.io/rdf-delta/rdf-patch.html) form
 
 ```bash
 # Create tracking metadata with explicit patch
-./nqpatch track old.nq new.nq patch.rdfp
+./nqpatch track create old.nq new.nq patch.rdfp
 
 # Create tracking metadata with auto-generated patch
-./nqpatch track old.nq new.nq
+./nqpatch track create old.nq new.nq
+
+# Create tracking metadata with compressed patch output
+./nqpatch track create old.nq new.nq patch.rdfp.gz
 ```
 
 The tracking layer creates:

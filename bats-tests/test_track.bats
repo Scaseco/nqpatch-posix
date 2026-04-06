@@ -27,23 +27,7 @@ create_patch() {
   create_file "new.nq" "a" "c" "e"
   create_patch "patch.rdfp" "A a" "D b" "D d" "A e"
   
-  run bash "$SCRIPTS_DIR/../nqpatch" "track" \
-    "$TEMP_DIR/old.nq" \
-    "$TEMP_DIR/new.nq" \
-    "$TEMP_DIR/patch.rdfp"
-  
-  [ "$status" -eq 0 ]
-  [ -f "$TEMP_DIR/old.nq.sha1" ]
-  [ -f "$TEMP_DIR/new.nq.sha1" ]
-  [ -f "$TEMP_DIR/patch.rdfp.sha1" ]
-  [ -f "$TEMP_DIR/patch.rdfp.rel" ]
-}
-
-@test "track create: generates patch if not provided" {
-  create_file "old.nq" "b" "c" "d"
-  create_file "new.nq" "a" "c" "e"
-  
-  run bash "$SCRIPTS_DIR/../nqpatch" "track" \
+run bash "$SCRIPTS_DIR/../nqpatch" "track" "create" \
     "$TEMP_DIR/old.nq" \
     "$TEMP_DIR/new.nq"
   
@@ -69,7 +53,7 @@ create_patch() {
   create_file "new.nq" "a" "c" "e"
   create_patch "patch.rdfp" "A a" "D b" "D d" "A e"
   
-  bash "$SCRIPTS_DIR/../nqpatch" "track" \
+bash "$SCRIPTS_DIR/../nqpatch" "track" "create" \
     "$TEMP_DIR/old.nq" \
     "$TEMP_DIR/new.nq" \
     "$TEMP_DIR/patch.rdfp"
@@ -92,7 +76,7 @@ create_patch() {
   echo "oldhash123" > "$TEMP_DIR/old.nq.sha1"
   echo "newhash456" > "$TEMP_DIR/new.nq.sha1"
   
-  run bash "$SCRIPTS_DIR/../nqpatch" "track" \
+  run bash "$SCRIPTS_DIR/../nqpatch" "track" "create" \
     "$TEMP_DIR/old.nq" \
     "$TEMP_DIR/new.nq" \
     "$TEMP_DIR/patch.rdfp"
@@ -109,7 +93,7 @@ create_patch() {
   # Wrong patch (doesn't match old->new transition)
   create_patch "wrong.rdfp" "A x" "D y"
   
-  run bash "$SCRIPTS_DIR/../nqpatch" "track" \
+  run bash "$SCRIPTS_DIR/../nqpatch" "track" "create" \
     "$TEMP_DIR/old.nq" \
     "$TEMP_DIR/new.nq" \
     "$TEMP_DIR/wrong.rdfp"
@@ -118,7 +102,7 @@ create_patch() {
   [ "$status" -eq 0 ] || [ "$status" -eq 1 ]
 }
 
-@test "track create: usage shows help" {
+@test "track: usage shows help" {
   run bash "$SCRIPTS_DIR/../nqpatch" "track"
   
   [ "$status" -eq 1 ]
@@ -129,8 +113,8 @@ create_patch() {
   create_file "new.nq" "a" "c" "e"
   create_patch "patch.rdfp" "A a" "D b" "D d" "A e"
   
-  run bash "$SCRIPTS_DIR/../nqpatch" "track" \
-    "$TEMP_DIR/nonexistent.nq" \
+ run bash "$SCRIPTS_DIR/../nqpatch" "track" "create" \
+    "$TEMP_DIR/old.nq" \
     "$TEMP_DIR/new.nq" \
     "$TEMP_DIR/patch.rdfp"
   
@@ -142,7 +126,7 @@ create_patch() {
   create_file "old.nq" "b" "c" "d"
   create_patch "patch.rdfp" "A a" "D b" "D d" "A e"
   
-  run bash "$SCRIPTS_DIR/../nqpatch" "track" \
+ run bash "$SCRIPTS_DIR/../nqpatch" "track" "create" \
     "$TEMP_DIR/old.nq" \
     "$TEMP_DIR/nonexistent.nq" \
     "$TEMP_DIR/patch.rdfp"
