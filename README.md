@@ -3,17 +3,35 @@
 Command-line tools for efficiently patching large sorted N-Quads RDF files.
 Implemented as bash scripts backed by the POSIX tooling awk, sort, and sed.
 
+## Tracking Layer
+
+NQPatch includes a *tracking layer* to manage patch relationships using SHA1 checksums.
+The metadata for a file `x` is stored in a file `x.meta.json`.
+
+- **nqpatch track sort input output**: Creates `output` by sorting `input`
+  - Creates or extends `input.meta.json` with the sha1 hash of the input file
+  - Creates or extends `output.meta.json` with the `sha1` and `sha1-original` keys with the hashes of the output file and the input file, respectively.
+- **nqpatch track create**: `nqpatch track create old_dump new_dump patch.rdfp`: Creates `patch.rdfp` as the diff between `old` and `new`
+  - Creates or extends `old_dump.meta.json` with the sha1 hash of the `old_dump` file
+  - Creates or extends `new_dump.meta.json` with the sha1 hash of the `new_dump` file
+  - Creates or extends `patch.rdfp.meta.json` with the `sha1-from` and `sha1-to` keys set to the hashes of the old/new dumps
+  - Patch filename must be explicitly provided (not auto-generated)
+  - Supports compressed patch output (.gz, .bz2, .xz, .zst)
+
 ## Project Status
 
-- Functional and tested
+- v2.x: Functional and tested with `.meta.json` metadata storage
+- v1.x: See `v1.0.0` tag for legacy `.sha1` file-based tracking
 
 ## Overview
 
-This project provides three shell scripts for working with RDF patch files:
+This project provides command-line tools for working with RDF patches, accessible via the `nqpatch` wrapper script:
 
-- **nqpatch-create.sh**: Generate a patch from two sorted N-Quads files
-- **nqpatch-apply.sh**: Apply one or more patches to a base N-Quads file  
-- **nqpatch-merge.sh**: Merge multiple patches into a single patch
+- **nqpatch create**: Generate a patch from two sorted N-Quads files
+- **nqpatch apply**: Apply one or more patches to a base N-Quads file
+- **nqpatch merge**: Merge multiple patches into a single patch
+- **nqpatch track sort**: Sort an N-Quads file and create tracking metadata
+- **nqpatch track create**: Create a patch and tracking metadata (patch filename must be explicitly provided)
 
 ## Design
 
@@ -21,25 +39,41 @@ The tools rely on `zcat` for transparent decompression of compressed files. By d
 
 All tools work on the basis of byte-sorted N-Quads (e.g., `LC_ALL=C sort -u`). The `.rdfp` RDF patch files are sorted N-Quads prefixed with `A ` or `D ` for additions or deletions, respectively.
 
-⚠️ For maximum performance, zutils should be configured to leverage the fastest (de-)compression tools!
-  As an example, in order to use `lbzip2` instead of `bzip2`, add the following entry to `.config/zutils.conf`.
-```bash
-bz2 = lbzip2
+⚠️ For maximum performance, zutils should be configured to leverage the fastest (de-)compression tools. Also, for processing multiple files simultaneously, you want
+   to limit the resources for each tool. The following zutils configuration uses parallel versions of the compression codec tools and restricts them to 4 cores. The file can be placed under `.config/zutils.conf`:
 ```
-Details can be found at: [https://www.nongnu.org/zutils/manual/zutils_manual.html#Configuration](https://www.nongnu.org/zutils/manual/zutils_manual.html#Configuration) \
-Alternatively, `rdfpach-nq` supports [Factory Expressions](#factory-expressions).
+bz2 = lbzip2 -n4
+gz = pigz -p4
+xz = pixz -p4
+zst = zstd -T4
+lz = lz4
+```
+
+The corresponding packages on Ubuntu are:
+```bash
+sudo apt-get install lbzip2 pigz pixz zstd lz4
+```
+
+Details can be found at: [https://www.nongnu.org/zutils/manual/zutils_manual.html#Configuration](https://www.nongnu.org/zutils/manual/zutils_manual.html#Configuration)
+
 
 ## Quick Start
 
 ```bash
 # Create a patch from two files
-./nqpatch-create.sh old.nq new.nq > patch.rdfp
+nqpatch create old.nq new.nq > patch.rdfp
 
 # Apply a patch
-./nqpatch-apply.sh old.nq patch.rdfp > new.nq
+nqpatch apply old.nq patch.rdfp > new.nq
 
 # Merge multiple patches
-./nqpatch-merge.sh patch1.rdfp patch2.rdfp > merged.rdfp
+nqpatch merge patch1.rdfp patch2.rdfp > merged.rdfp
+
+# Create tracking metadata
+nqpatch track create old.nq new.nq patch.rdfp
+
+# Sort with tracking metadata
+nqpatch track sort input.nq output.nq
 ```
 
 **Note**: The scripts work with both plain and compressed files. For compressed files, they use `zcat` (or `zutils` if installed for multi-format support).
@@ -53,15 +87,17 @@ No installation required. Clone and make scripts executable:
 ```bash
 git clone https://github.com/Scaseco/nqpatch-posix.git
 cd nqpatch-posix
-chmod +x *.sh
+chmod +x nqpatch *.sh
 ```
+
+
 
 ## Usage
 
 ### Creating Patches
 
 ```bash
-./nqpatch-create.sh old.sorted.nq new.sorted.nq > patch.rdfp
+nqpatch create old.sorted.nq new.sorted.nq > patch.rdfp
 ```
 
 Patches use the [RDF-Delta](https://afs.github.io/rdf-delta/rdf-patch.html) format with `A` (add) and `D` (delete) prefixes.
@@ -69,34 +105,51 @@ Patches use the [RDF-Delta](https://afs.github.io/rdf-delta/rdf-patch.html) form
 ### Applying Patches
 
 ```bash
-# Plain or compressed files (via zcat/zutils)
-./nqpatch-apply.sh base.nq[.bz2|.xz] patch.rdfp[.bz2|.xz]
+# Plain or compressed files (zcat handles decompression automatically)
+nqpatch apply base.nq patch.rdfp
 
 # Multiple patches (applied sequentially)
-./nqpatch-apply.sh base.nq patch1.rdfp patch2.rdfp
+nqpatch apply base.nq patch1.rdfp patch2.rdfp
+
+# Using process substitution for remote patches
+nqpatch apply local-data.nq <(curl https://example.org/patch.rdfp)
 ```
 
 ### Merging Patches
 
 ```bash
-./nqpatch-merge.sh patch1.rdfp patch2.rdfp > merged.rdfp
+nqpatch merge patch1.rdfp patch2.rdfp > merged.rdfp
 ```
 
-## Factory Expressions
-
-Arguments starting with `@` are interpreted as factory expressions (commands to be evaluated):
+### Tracking Patches
 
 ```bash
-./nqpatch-apply.sh \
-  '@lbzcat wikidata.nt.bz2' \
-  '@lbzcat patch.rdfp.bz2' \
-  | lbzcat -z > result.nt.bz2
+# Create tracking metadata
+nqpatch track create old.nq new.nq patch.rdfp
 ```
 
-**Note**:
-* (Plain) Process substitution `<(...)` should work but will currently be fed into an extra `zcat`. Patch files only need to be read once.
-* Process Substitution using a temporary file `=(...)` will work, but this materializes the argument as a plain text file, which may use up a lot of disk space.
+The tracking layer creates `.meta.json` files containing:
+- `sha1` - SHA1 hash of the file
+- `sha1-original` (for sorted files) - SHA1 hash of the original unsorted file
+- `sha1-from` (for patches) - SHA1 hash of the source snapshot
+- `sha1-to` (for patches) - SHA1 hash of the target snapshot
 
+
+### Tracking Layer Design
+
+The tracking layer uses SHA1 hashes to establish relationships between snapshots and patches, stored in `.meta.json` files:
+
+- **JSON metadata files** (`.meta.json`): Store SHA1 hashes and relationships in a structured format
+- **sha1**: Hash of the file itself
+- **sha1-original**: For sorted files, hash of the original unsorted file
+- **sha1-from/sha1-to**: For patches, hashes of source and target snapshots
+- **No centralized registry**: Each repository maintains its own `.meta.json` files
+- **Move-resistant**: Files can be relocated; hash relationships persist as long as metadata files move with them
+
+Future tools can use these files to:
+- Find patches for a given snapshot
+- Verify patch integrity
+- Optimize patch chains vs full snapshot downloads
 
 ### Docker
 
@@ -123,15 +176,15 @@ Run with the wrapper script using `create`, `apply`, or `merge` commands:
 
 ```bash
 # Create a patch from two files
-docker run --rm --log-driver=none -i -v "$(pwd):/data" aksw/nqpatch-posix \
+docker run --rm --log-driver=none -i -v "$(pwd):/data" aksw/nqpatch \
   create old.nq new.nq > patch.rdfp
 
 # Apply a patch
-docker run --rm --log-driver=none -i -v "$(pwd):/data" aksw/nqpatch-posix \
+docker run --rm --log-driver=none -i -v "$(pwd):/data" aksw/nqpatch \
   apply old.nq patch.rdfp > new.nq
 
 # Merge multiple patches
-docker run --rm --log-driver=none -i -v "$(pwd):/data" aksw/nqpatch-posix \
+docker run --rm --log-driver=none -i -v "$(pwd):/data" aksw/nqpatch \
   merge patch1.rdfp patch2.rdfp > merged.rdfp
 ```
 
@@ -149,9 +202,9 @@ Tested on AMD Ryzen AI Max+ 395 with Wikidata-scale data:
 <summary>Detailed Experiment Output</summary>
 
 ```bash
-./nqpatch-apply.sh \
-  '@lbzcat wikidata-20250723-truthy-BETA.sorted.nt.bz2' \
-  '@lbzcat wikidata-20250723-to-20250918-truthy-BETA.sorted.rdfp.bz2' \
+nqpatch apply \
+  wikidata-20250723-truthy-BETA.sorted.nt.bz2 \
+  wikidata-20250723-to-20250918-truthy-BETA.sorted.rdfp.bz2 \
   | pv | lbzip2 -z > patched-20250918.nt.bz2
 
 # 969GiB 0:41:47 [ 395MiB/s]
@@ -174,15 +227,15 @@ md5sum wikidata-20250918-truthy-BETA.sorted.nt.bz2
 
 ## Examples
 
-See `test/` directory for toy examples:
+See `test/` directory for toy examples. For version 1.x implementation with separate `.sha1` files, see the `v1.0.0` tag.
 
 ```bash
 # Apply merged patch to snapshot1
-./nqpatch-apply.sh test/snapshot1.nq test/patch-1-to-2.rdfp test/patch-2-to-3.rdfp
+nqpatch apply test/snapshot1.nq test/patch-1-to-2.rdfp test/patch-2-to-3.rdfp
 
 # Or merge first, then apply
-./nqpatch-apply.sh test/snapshot1.nq \
-  =(./nqpatch-merge.sh test/patch-1-to-2.rdfp test/patch-2-to-3.rdfp)
+nqpatch apply test/snapshot1.nq \
+  =(nqpatch merge test/patch-1-to-2.rdfp test/patch-2-to-3.rdfp)
 ```
 
 ## Testing
