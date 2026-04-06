@@ -9,8 +9,8 @@ NQPatch includes a tracking layer to manage patch relationships using SHA1 check
 
 - **nqpatch track create**: Create tracking metadata for patches
   - Creates `.sha1` files for snapshots and patches (hash-only format)
-  - Creates `.rel` files linking patches to their from/to snapshots
-  - Automatically generates patches if not provided
+  - Creates `.from-sha1` and `.to-sha1` files linking patches to their source/target snapshots
+  - Requires explicit patch filename (no auto-generation)
   - Supports compressed patch output (.gz, .bz2, .xz, .zst)
 
 See the individual script documentation for usage details.
@@ -26,7 +26,7 @@ This project provides four shell scripts for working with RDF patch files:
 - **nqpatch-create.sh**: Generate a patch from two sorted N-Quads files
 - **nqpatch-apply.sh**: Apply one or more patches to a base N-Quads file  
 - **nqpatch-merge.sh**: Merge multiple patches into a single patch
-- **nqpatch-track-create.sh**: Create tracking metadata for patches (creates .sha1 and .rel files)
+- **nqpatch-track-create.sh**: Create tracking metadata for patches (creates .sha1, .from-sha1, and .to-sha1 files)
 
 ## Design
 
@@ -54,8 +54,8 @@ Alternatively, `rdfpach-nq` supports [Factory Expressions](#factory-expressions)
 # Merge multiple patches
 ./nqpatch-merge.sh patch1.rdfp patch2.rdfp > merged.rdfp
 
-# Create tracking metadata (creates .sha1 and .rel files)
-./nqpatch track create old.nq new.nq [patch.rdfp[.gz|.bz2|.xz|.zst]]
+# Create tracking metadata (creates .sha1, .from-sha1, and .to-sha1 files)
+./nqpatch track create old.nq new.nq patch.rdfp[.gz|.bz2|.xz|.zst]
 ```
 
 **Note**: The scripts work with both plain and compressed files. For compressed files, they use `zcat` (or `zutils` if installed for multi-format support).
@@ -109,11 +109,8 @@ Patches use the [RDF-Delta](https://afs.github.io/rdf-delta/rdf-patch.html) form
 ### Tracking Patches
 
 ```bash
-# Create tracking metadata with explicit patch
+# Create tracking metadata with explicit patch file
 ./nqpatch track create old.nq new.nq patch.rdfp
-
-# Create tracking metadata with auto-generated patch
-./nqpatch track create old.nq new.nq
 
 # Create tracking metadata with compressed patch output
 ./nqpatch track create old.nq new.nq patch.rdfp.gz
@@ -122,7 +119,8 @@ Patches use the [RDF-Delta](https://afs.github.io/rdf-delta/rdf-patch.html) form
 The tracking layer creates:
 - `old.sha1`, `new.sha1` - SHA1 hashes of snapshot files
 - `patch.sha1` - SHA1 hash of the patch file
-- `patch.rel` - Lineage file with format: `<from-sha1> <to-sha1>`
+- `patch.from-sha1` - SHA1 hash of the source snapshot
+- `patch.to-sha1` - SHA1 hash of the target snapshot
 
 ## Factory Expressions
 
@@ -145,8 +143,9 @@ Arguments starting with `@` are interpreted as factory expressions (commands to 
 The tracking layer uses SHA1 hashes to establish relationships between snapshots and patches:
 
 - **Hash files** (`.sha1`): Contain only the SHA1 hash, portable across systems
-- **Lineage files** (`.rel`): Contain `from-sha1 to-sha1` space-separated on one line
-- **No centralized registry**: Each repository maintains its own `.sha1` and `.rel` files
+- **From-sha1 files** (`.from-sha1`): Contain the SHA1 hash of the source snapshot
+- **To-sha1 files** (`.to-sha1`): Contain the SHA1 hash of the target snapshot
+- **No centralized registry**: Each repository maintains its own `.sha1`, `.from-sha1`, and `.to-sha1` files
 - **Move-resistant**: Files can be relocated; hash relationships persist as long as hash files move with them
 
 Future tools can use these files to:

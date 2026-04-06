@@ -2,10 +2,11 @@
 
 ## Overview
 
-This directory contains Bats (Bash Automated Testing System) test suites for the three main scripts (via the entry point `nqpatch`):
+This directory contains Bats (Bash Automated Testing System) test suites for the four main scripts (via the entry point `nqpatch`):
 - `nqpatch-create.sh` - Create patches from N-Quads snapshots
 - `nqpatch-apply.sh` - Apply patches to N-Quads files
 - `nqpatch-merge.sh` - Merge multiple patches
+- `nqpatch-track-create.sh` - Create tracking metadata for patches
 
 ## Running Tests
 
@@ -20,6 +21,7 @@ Or run individual test files:
 bats test_merge.bats
 bats test_create.bats
 bats test_apply.bats
+bats test_track.bats
 ```
 
 ## Test Structure
@@ -45,6 +47,14 @@ Tests for the apply script:
 - Merged patch produces same result as sequential
 - Stable sort integration
 - Usage error handling
+
+### test\_track.bats
+Tests for the track create script:
+- Creates hash files (.sha1) and from/to-sha1 tracking files
+- From-sha1 and to-sha1 files contain correct snapshot hashes
+- Does not overwrite existing hash files
+- Usage help display
+- Error handling for missing input files
 
 ## Test Data Strategy
 

@@ -22,55 +22,51 @@ create_patch() {
   printf "%s\n" "$@" > "$TEMP_DIR/$filename"
 }
 
-@test "track create: creates hash files and lineage" {
+@test "track create: creates hash files and from/to-sha1" {
   create_file "old.nq" "b" "c" "d"
   create_file "new.nq" "a" "c" "e"
-  create_patch "patch.rdfp" "A a" "D b" "D d" "A e"
   
-run bash "$SCRIPTS_DIR/../nqpatch" "track" "create" \
-    "$TEMP_DIR/old.nq" \
-    "$TEMP_DIR/new.nq"
-  
+  run bash "$SCRIPTS_DIR/../nqpatch" "track" "create" \
+      "$TEMP_DIR/old.nq" \
+      "$TEMP_DIR/new.nq" \
+      "$TEMP_DIR/patch.rdfp"
+
   [ "$status" -eq 0 ]
   [ -f "$TEMP_DIR/old.nq.sha1" ]
   [ -f "$TEMP_DIR/new.nq.sha1" ]
-  
-  # Find the generated patch file (temp file with .sha1 and .rel)
-  patch_sha1_file=$(find "$TEMP_DIR" -name "*.rdfp.sha1" 2>/dev/null | head -1)
-  [ -n "$patch_sha1_file" ]
-  
-  # Verify the patch was generated correctly
-  patch_file="${patch_sha1_file%.sha1}"
-  [ -f "$patch_file" ]
-  grep -q "A a" "$patch_file"
-  grep -q "D b" "$patch_file"
-  grep -q "D d" "$patch_file"
-  grep -q "A e" "$patch_file"
+  [ -f "$TEMP_DIR/patch.rdfp" ]
+  [ -f "$TEMP_DIR/patch.rdfp.sha1" ]
+  [ -f "$TEMP_DIR/patch.rdfp.from-sha1" ]
+  [ -f "$TEMP_DIR/patch.rdfp.to-sha1" ]
+
+  grep -q "A a" "$TEMP_DIR/patch.rdfp"
+  grep -q "D b" "$TEMP_DIR/patch.rdfp"
+  grep -q "D d" "$TEMP_DIR/patch.rdfp"
+  grep -q "A e" "$TEMP_DIR/patch.rdfp"
 }
 
-@test "track create: lineage file contains from and to hashes" {
+@test "track create: from-sha1 and to-sha1 files contain correct hashes" {
   create_file "old.nq" "b" "c" "d"
   create_file "new.nq" "a" "c" "e"
-  create_patch "patch.rdfp" "A a" "D b" "D d" "A e"
   
-bash "$SCRIPTS_DIR/../nqpatch" "track" "create" \
-    "$TEMP_DIR/old.nq" \
-    "$TEMP_DIR/new.nq" \
-    "$TEMP_DIR/patch.rdfp"
+  bash "$SCRIPTS_DIR/../nqpatch" "track" "create" \
+      "$TEMP_DIR/old.nq" \
+      "$TEMP_DIR/new.nq" \
+      "$TEMP_DIR/patch.rdfp"
   
-  rel_content=$(cat "$TEMP_DIR/patch.rdfp.rel")
+  from_sha1=$(cat "$TEMP_DIR/patch.rdfp.from-sha1")
+  to_sha1=$(cat "$TEMP_DIR/patch.rdfp.to-sha1")
   
   old_sha1=$(cat "$TEMP_DIR/old.nq.sha1")
   new_sha1=$(cat "$TEMP_DIR/new.nq.sha1")
   
-  echo "$rel_content" | grep -q "$old_sha1"
-  echo "$rel_content" | grep -q "$new_sha1"
+  [ "$from_sha1" = "$old_sha1" ]
+  [ "$to_sha1" = "$new_sha1" ]
 }
 
 @test "track create: does not overwrite existing hash files" {
   create_file "old.nq" "b" "c" "d"
   create_file "new.nq" "a" "c" "e"
-  create_patch "patch.rdfp" "A a" "D b" "D d" "A e"
   
   # Pre-create hash files with specific content
   echo "oldhash123" > "$TEMP_DIR/old.nq.sha1"
@@ -85,21 +81,6 @@ bash "$SCRIPTS_DIR/../nqpatch" "track" "create" \
   # Hash files should retain original content (not be overwritten)
   [ "$(cat "$TEMP_DIR/old.nq.sha1")" = "oldhash123" ]
   [ "$(cat "$TEMP_DIR/new.nq.sha1")" = "newhash456" ]
-}
-
-@test "track create: verifies patch matches old and new files" {
-  create_file "old.nq" "b" "c" "d"
-  create_file "new.nq" "a" "c" "e"
-  # Wrong patch (doesn't match old->new transition)
-  create_patch "wrong.rdfp" "A x" "D y"
-  
-  run bash "$SCRIPTS_DIR/../nqpatch" "track" "create" \
-    "$TEMP_DIR/old.nq" \
-    "$TEMP_DIR/new.nq" \
-    "$TEMP_DIR/wrong.rdfp"
-  
-  # Should fail because patch doesn't transition old->new
-  [ "$status" -eq 0 ] || [ "$status" -eq 1 ]
 }
 
 @test "track: usage shows help" {
