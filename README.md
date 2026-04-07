@@ -35,13 +35,13 @@ Alternatively, `rdfpach-nq` supports [Factory Expressions](#factory-expressions)
 
 ```bash
 # Create a patch from two files
-./nqpatch-create.sh old.nq new.nq > patch.rdfp
+./nqpatch create old.nq new.nq > patch.rdfp
 
 # Apply a patch
-./nqpatch-apply.sh old.nq patch.rdfp > new.nq
+./nqpatch apply old.nq patch.rdfp > new.nq
 
 # Merge multiple patches
-./nqpatch-merge.sh patch1.rdfp patch2.rdfp > merged.rdfp
+./nqpatch merge patch1.rdfp patch2.rdfp > merged.rdfp
 ```
 
 **Note**: The scripts work with both plain and compressed files. For compressed files, they use `zcat` (or `zutils` if installed for multi-format support).
@@ -63,7 +63,7 @@ chmod +x *.sh
 ### Creating Patches
 
 ```bash
-./nqpatch-create.sh old.sorted.nq new.sorted.nq > patch.rdfp
+./nqpatch create old.sorted.nq new.sorted.nq > patch.rdfp
 ```
 
 Patches use the [RDF-Delta](https://afs.github.io/rdf-delta/rdf-patch.html) format with `A` (add) and `D` (delete) prefixes.
@@ -72,16 +72,16 @@ Patches use the [RDF-Delta](https://afs.github.io/rdf-delta/rdf-patch.html) form
 
 ```bash
 # Plain or compressed files (via zcat/zutils)
-./nqpatch-apply.sh base.nq[.bz2|.xz] patch.rdfp[.bz2|.xz]
+./nqpatch apply base.nq[.bz2|.xz] patch.rdfp[.bz2|.xz]
 
 # Multiple patches (applied sequentially)
-./nqpatch-apply.sh base.nq patch1.rdfp patch2.rdfp
+./nqpatch apply base.nq patch1.rdfp patch2.rdfp
 ```
 
 ### Merging Patches
 
 ```bash
-./nqpatch-merge.sh patch1.rdfp patch2.rdfp > merged.rdfp
+./nqpatch merge patch1.rdfp patch2.rdfp > merged.rdfp
 ```
 
 ## Factory Expressions
@@ -89,7 +89,7 @@ Patches use the [RDF-Delta](https://afs.github.io/rdf-delta/rdf-patch.html) form
 Arguments starting with `@` are interpreted as factory expressions (commands to be evaluated):
 
 ```bash
-./nqpatch-apply.sh \
+./nqpatch apply \
   '@lbzcat wikidata.nt.bz2' \
   '@lbzcat patch.rdfp.bz2' \
   | lbzcat -z > result.nt.bz2
@@ -151,7 +151,7 @@ Tested on AMD Ryzen AI Max+ 395 with Wikidata-scale data:
 <summary>Detailed Experiment Output</summary>
 
 ```bash
-./nqpatch-apply.sh \
+./nqpatch apply \
   '@lbzcat wikidata-20250723-truthy-BETA.sorted.nt.bz2' \
   '@lbzcat wikidata-20250723-to-20250918-truthy-BETA.sorted.rdfp.bz2' \
   | pv | lbzip2 -z > patched-20250918.nt.bz2
@@ -180,11 +180,11 @@ See `test/` directory for toy examples:
 
 ```bash
 # Apply merged patch to snapshot1
-./nqpatch-apply.sh test/snapshot1.nq test/patch-1-to-2.rdfp test/patch-2-to-3.rdfp
+./nqpatch apply test/snapshot1.nq test/patch-1-to-2.rdfp test/patch-2-to-3.rdfp
 
 # Or merge first, then apply
-./nqpatch-apply.sh test/snapshot1.nq \
-  =(./nqpatch-merge.sh test/patch-1-to-2.rdfp test/patch-2-to-3.rdfp)
+./nqpatch apply test/snapshot1.nq \
+  =(./nqpatch merge test/patch-1-to-2.rdfp test/patch-2-to-3.rdfp)
 ```
 
 ## Testing
