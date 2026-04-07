@@ -17,6 +17,8 @@ This project provides three shell scripts for working with RDF patch files:
 - **nqpatch-apply.sh**: Apply one or more patches to a base N-Quads file  
 - **nqpatch-merge.sh**: Merge multiple patches into a single patch
 
+The entrypoint **nqpatch** features the sub-commands `create`, `apply` and `merge` that delegate to the scripts listed above.
+
 ## Design
 
 The tools rely on `zcat` for transparent decompression of compressed files. By default, system `zcat` only supports gzip, but installing [`zutils`](https://linux.die.net/man/1/zutils) replaces it with a configurable decompression infrastructure that handles bzip2, gzip, lzip, xz, and zstd.
