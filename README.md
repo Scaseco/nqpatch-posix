@@ -127,15 +127,15 @@ Run with the wrapper script using `create`, `apply`, or `merge` commands:
 
 ```bash
 # Create a patch from two files
-docker run --rm --log-driver=none -i -v "$(pwd):/data" aksw/nqpatch-posix \
+docker run --rm --log-driver=none -i -v "$(pwd):/data" aksw/nqpatch \
   create old.nq new.nq > patch.rdfp
 
 # Apply a patch
-docker run --rm --log-driver=none -i -v "$(pwd):/data" aksw/nqpatch-posix \
+docker run --rm --log-driver=none -i -v "$(pwd):/data" aksw/nqpatch \
   apply old.nq patch.rdfp > new.nq
 
 # Merge multiple patches
-docker run --rm --log-driver=none -i -v "$(pwd):/data" aksw/nqpatch-posix \
+docker run --rm --log-driver=none -i -v "$(pwd):/data" aksw/nqpatch \
   merge patch1.rdfp patch2.rdfp > merged.rdfp
 ```
 
