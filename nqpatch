@@ -2,6 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 case "${1:-}" in
   create) shift; exec "${SCRIPT_DIR}/nqpatch-create.sh" "$@" ;;
   apply)  shift; exec "${SCRIPT_DIR}/nqpatch-apply.sh" "$@" ;;

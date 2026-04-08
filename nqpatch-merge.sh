@@ -9,25 +9,18 @@ if [ $# -lt 1 ]; then
     exit 1
 fi
 
-# Resolves an argument to a command string factory
-# Arguments starting with '@' are interpreted as commands, such as '@lbzcat patch1.rdfp.bz2'.
-# Uses zcat -f as a universal source (works for several formats including .bz2 if zutils is installed)
-resolve_factory() {
-    [[ "$1" == @* ]] && echo "${1:1}" || printf 'zcat -f -- %q' "$1"
-}
+# Resolves a file argument to a command string that streams its decoded content
+stream_cmd() { printf 'zcat -f -- %q' "$1"; }
 
 # Calculate a safe batch size based on system limits
 # Without this fiddling, sort -m will block if given more than 16 arguments.
 MAX_FDS=$(ulimit -n)
 SAFE_BATCH=$(( MAX_FDS - 20 )) # Leave room for script overhead
 
-# Build the command to merge the pre-sorted streams
-# We use -k2 to ignore the A/D prefix during the merge comparison
-# Sort must be stable (-s) because argument order is relevant!
 MERGE_CMD="sort -m -s -k2 --batch-size=$SAFE_BATCH"
 for arg in "$@"; do
-    FACTORY=$(resolve_factory "$arg")
-    MERGE_CMD="$MERGE_CMD <($FACTORY)"
+    PATCH_STREAM_CMD=$(stream_cmd "$arg")
+    MERGE_CMD="$MERGE_CMD <($PATCH_STREAM_CMD)"
 done
 
 # The State Machine: Identical quads are now adjacent and
