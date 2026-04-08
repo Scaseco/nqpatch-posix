@@ -31,7 +31,6 @@ All tools work on the basis of byte-sorted N-Quads (e.g., `LC_ALL=C sort -u`). T
 bz2 = lbzip2
 ```
 Details can be found at: [https://www.nongnu.org/zutils/manual/zutils_manual.html#Configuration](https://www.nongnu.org/zutils/manual/zutils_manual.html#Configuration) \
-Alternatively, `rdfpach-nq` supports [Factory Expressions](#factory-expressions).
 
 ## Quick Start
 
@@ -86,21 +85,9 @@ Patches use the [RDF-Delta](https://afs.github.io/rdf-delta/rdf-patch.html) form
 ./nqpatch merge patch1.rdfp patch2.rdfp > merged.rdfp
 ```
 
-## Factory Expressions
-
-Arguments starting with `@` are interpreted as factory expressions (commands to be evaluated):
-
-```bash
-./nqpatch apply \
-  '@lbzcat wikidata.nt.bz2' \
-  '@lbzcat patch.rdfp.bz2' \
-  | lbzcat -z > result.nt.bz2
-```
-
 **Note**:
-* (Plain) Process substitution `<(...)` should work but will currently be fed into an extra `zcat`. Patch files only need to be read once.
+* (Plain) Process substitution `<(...)` works and will be fed into an extra `zcat` which may handle any know (compression) encoding. Patch files only need to be read once.
 * Process Substitution using a temporary file `=(...)` will work, but this materializes the argument as a plain text file, which may use up a lot of disk space.
-
 
 ### Docker
 
