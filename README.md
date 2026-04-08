@@ -141,8 +141,8 @@ Tested on AMD Ryzen AI Max+ 395 with Wikidata-scale data:
 
 ```bash
 ./nqpatch apply \
-  '@lbzcat wikidata-20250723-truthy-BETA.sorted.nt.bz2' \
-  '@lbzcat wikidata-20250723-to-20250918-truthy-BETA.sorted.rdfp.bz2' \
+  wikidata-20250723-truthy-BETA.sorted.nt.bz2 \
+  wikidata-20250723-to-20250918-truthy-BETA.sorted.rdfp.bz2 \
   | pv | lbzip2 -z > patched-20250918.nt.bz2
 
 # 969GiB 0:41:47 [ 395MiB/s]
