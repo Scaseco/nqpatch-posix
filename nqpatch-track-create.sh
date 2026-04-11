@@ -6,8 +6,8 @@ set -euo pipefail
 #
 # Creates:
 #   old.sha1, new.sha1, patch.sha1 (hash files)
-#   patch.from-sha1 (same hash as old.sha1)
-#   patch.to-sha1   (same hash as new.sha1)
+#   patch.sha1-from (same hash as old.sha1)
+#   patch.sha1-to   (same hash as new.sha1)
 #
 # Patch output compression is auto-detected from file extension:
 #   .gz  -> gzip
@@ -95,14 +95,14 @@ create_sha1_file "$NEW_FILE"
 PATCH_SHA1_FILE="${PATCH_FILE}.sha1"
 create_sha1_file "$PATCH_FILE"
 
-# Create patch.from-sha1 and patch.to-sha1
+# Create patch.sha1-from and patch.sha1-to
 OLD_SHA1=$(cat "${OLD_FILE}.sha1")
 NEW_SHA1=$(cat "${NEW_FILE}.sha1")
-PATCH_FROM_SHA1="${PATCH_FILE}.from-sha1"
-PATCH_TO_SHA1="${PATCH_FILE}.to-sha1"
+PATCH_SHA1_FROM="${PATCH_FILE}.sha1-from"
+PATCH_SHA1_TO="${PATCH_FILE}.sha1-to"
 
-echo "$OLD_SHA1" > "${PATCH_FROM_SHA1}"
-echo "$NEW_SHA1" > "${PATCH_TO_SHA1}"
+echo "$OLD_SHA1" > "${PATCH_SHA1_FROM}"
+echo "$NEW_SHA1" > "${PATCH_SHA1_TO}"
 
 echo "Created tracking metadata:" >&2
 echo "  ${OLD_FILE}.sha1    ($OLD_SHA1)" >&2

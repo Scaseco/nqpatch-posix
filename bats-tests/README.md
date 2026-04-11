@@ -50,8 +50,8 @@ Tests for the apply script:
 
 ### test\_track.bats
 Tests for the track create script:
-- Creates hash files (.sha1) and from/to-sha1 tracking files
-- From-sha1 and to-sha1 files contain correct snapshot hashes
+- Creates hash files (.sha1) and from/sha1-from tracking files
+- sha1-from and sha1-to files contain correct snapshot hashes
 - Does not overwrite existing hash files
 - Usage help display
 - Error handling for missing input files

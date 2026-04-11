@@ -22,7 +22,7 @@ create_patch() {
   printf "%s\n" "$@" > "$TEMP_DIR/$filename"
 }
 
-@test "track create: creates hash files and from/to-sha1" {
+@test "track create: creates hash files and sha1-{from/to}" {
   create_file "old.nq" "b" "c" "d"
   create_file "new.nq" "a" "c" "e"
   
@@ -36,8 +36,8 @@ create_patch() {
   [ -f "$TEMP_DIR/new.nq.sha1" ]
   [ -f "$TEMP_DIR/patch.rdfp" ]
   [ -f "$TEMP_DIR/patch.rdfp.sha1" ]
-  [ -f "$TEMP_DIR/patch.rdfp.from-sha1" ]
-  [ -f "$TEMP_DIR/patch.rdfp.to-sha1" ]
+  [ -f "$TEMP_DIR/patch.rdfp.sha1-from" ]
+  [ -f "$TEMP_DIR/patch.rdfp.sha1-to" ]
 
   grep -q "A a" "$TEMP_DIR/patch.rdfp"
   grep -q "D b" "$TEMP_DIR/patch.rdfp"
@@ -45,7 +45,7 @@ create_patch() {
   grep -q "A e" "$TEMP_DIR/patch.rdfp"
 }
 
-@test "track create: from-sha1 and to-sha1 files contain correct hashes" {
+@test "track create: sha1-from and sha1-to files contain correct hashes" {
   create_file "old.nq" "b" "c" "d"
   create_file "new.nq" "a" "c" "e"
   
@@ -54,14 +54,14 @@ create_patch() {
       "$TEMP_DIR/new.nq" \
       "$TEMP_DIR/patch.rdfp"
   
-  from_sha1=$(cat "$TEMP_DIR/patch.rdfp.from-sha1")
-  to_sha1=$(cat "$TEMP_DIR/patch.rdfp.to-sha1")
+  sha1_from=$(cat "$TEMP_DIR/patch.rdfp.sha1-from")
+  sha1_to=$(cat "$TEMP_DIR/patch.rdfp.sha1-to")
   
   old_sha1=$(cat "$TEMP_DIR/old.nq.sha1")
   new_sha1=$(cat "$TEMP_DIR/new.nq.sha1")
   
-  [ "$from_sha1" = "$old_sha1" ]
-  [ "$to_sha1" = "$new_sha1" ]
+  [ "$sha1_from" = "$old_sha1" ]
+  [ "$sha1_to" = "$new_sha1" ]
 }
 
 @test "track create: does not overwrite existing hash files" {
