@@ -19,7 +19,7 @@ set -euo pipefail
 #   .zst -> zstd
 #   (none) -> plain text
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
 
 # Detect compression tool from file extension
 ## TODO if lbzip2 is absent then fallback to bzip2
@@ -100,6 +100,7 @@ mv "${NEW_FILE}.tmp" "$NEW_FILE"
 
 echo "Hashing $NEW_FILE ..." >&2
 create_sha1_file "$NEW_FILE" "$NEW_SHA1_FILE"
+cp "$OLD_SHA1_FILE" "${NEW_FILE}.sha1-original"
 
 echo "Completed. Created tracking metadata:" >&2
 echo "  $OLD_SHA1_FILE    $(cat "$OLD_SHA1_FILE")" >&2

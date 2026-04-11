@@ -16,7 +16,7 @@ set -euo pipefail
 #   .zst -> zstd
 #   (none) -> plain text
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
 
 # Detect compression tool from file extension
 ## TODO if lbzip2 is absent then fallback to bzip2
