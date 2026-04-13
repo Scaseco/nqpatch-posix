@@ -85,7 +85,10 @@ create_sha1_file() {
 echo "Generating patch file $PATCH_FILE" >&2
 
 COMPRESSOR=$(detect_compressor "$PATCH_FILE")
-"$SCRIPT_DIR/nqpatch" "create" "$OLD_FILE" "$NEW_FILE" | $COMPRESSOR > "$PATCH_FILE"
+
+# Create patch to a tmp file first in case the process gets interrupted.
+"$SCRIPT_DIR/nqpatch" "create" "$OLD_FILE" "$NEW_FILE" | $COMPRESSOR > "${PATCH_FILE}.tmp"
+mv "${PATCH_FILE}.tmp" "$PATCH_FILE"
 
 create_sha1_file "$OLD_FILE"
 create_sha1_file "$NEW_FILE"
