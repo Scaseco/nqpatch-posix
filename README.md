@@ -34,13 +34,24 @@ The tools rely on `zcat` for transparent decompression of compressed files. By d
 
 All tools work on the basis of byte-sorted N-Quads (e.g., `LC_ALL=C sort -u`). The `.rdfp` RDF patch files are sorted N-Quads prefixed with `A ` or `D ` for additions or deletions, respectively.
 
-⚠️ For maximum performance, zutils should be configured to leverage the fastest (de-)compression tools!
-  As an example, in order to use `lbzip2` instead of `bzip2`, add the following entry to `.config/zutils.conf`.
-```bash
-bz2 = lbzip2
+⚠️ For maximum performance, zutils should be configured to leverage the fastest (de-)compression tools. Also, for processing multiple files simultaneously, you want
+   to limit the resources for each tool. The following zutils configuration uses parallel versions of the compression codec tools and restricts them to 4 cores. The file can be placed under `.config/zutils.conf`:
 ```
+bz2 = lbzip2 -n4
+gz = pigz -p4
+xz = pixz -p4
+zst = zstd -T4
+lz = lz4
+```
+
+The corresponding packages on Ubuntu are:
+```bash
+sudo apt-get install lbzip2 pigz pixz zstd lz4
+```
+
 Details can be found at: [https://www.nongnu.org/zutils/manual/zutils_manual.html#Configuration](https://www.nongnu.org/zutils/manual/zutils_manual.html#Configuration) \
 Alternatively, `rdfpach-nq` supports [Factory Expressions](#factory-expressions).
+
 
 ## Quick Start
 
