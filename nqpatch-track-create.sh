@@ -69,15 +69,23 @@ PATCH_FILE="${3:-}"
 [[ -n "$PATCH_FILE" ]] || { echo "Error: no patch file specified" >&2; exit 1; }
 [[ ! -f "$PATCH_FILE" ]] || { echo "Error: patch file already exists: $PATCH_FILE" >&2; exit 1; }
 
-# Create SHA1 hash files if absent.
-create_sha1_file() {
+create_sha1_meta_file() {
     local file="$1"
-    local sha1_file="${file}.sha1"
-    
-    if [ ! -f "$sha1_file" ]; then
-        echo "Generating $sha1_file" >&2
-        sha1sum "$file" | awk '{print $1}' > "$sha1_file"
+    local meta_file="$2"
+    local sha1=""
+
+    # Load the 'sha1' field from an existing .meta.json file
+    [ -f "$meta_file" ] && sha1=$(jq -r '.sha1 // empty' "$meta_file")
+
+    if [ -z "$sha1" ]; then
+        echo "Computing checksum and updating $meta_file" >&2
+        local oldJson="{}"
+        [ -f "$meta_file" ] && oldJson=$(cat "$meta_file" | jq)
+        sha1=$(sha1sum "$file" | awk '{print $1}')
+        local newJson=$(jq -n --argjson existing "$oldJson" --arg sha1 "$sha1" '$existing | .sha1 = $sha1')
+        echo "$newJson" | jq > "$meta_file"
     fi
+    echo "$sha1"
 }
 
 # Generate or verify patch file
@@ -90,25 +98,31 @@ COMPRESSOR=$(detect_compressor "$PATCH_FILE")
 "$SCRIPT_DIR/nqpatch" "create" "$OLD_FILE" "$NEW_FILE" | $COMPRESSOR > "${PATCH_FILE}.tmp"
 mv "${PATCH_FILE}.tmp" "$PATCH_FILE"
 
-create_sha1_file "$OLD_FILE"
-create_sha1_file "$NEW_FILE"
+OLD_META_FILE="${OLD_FILE}.meta.json"
+NEW_META_FILE="${NEW_FILE}.meta.json"
+
+OLD_SHA1=$(create_sha1_meta_file "$OLD_FILE" "$OLD_META_FILE")
+NEW_SHA1=$(create_sha1_meta_file "$NEW_FILE" "$NEW_META_FILE")
 # Note: patch file will remain; caller should clean up if needed
 
 # Create patch.sha1
-PATCH_SHA1_FILE="${PATCH_FILE}.sha1"
-create_sha1_file "$PATCH_FILE"
+# PATCH_SHA1_FILE="${PATCH_FILE}.sha1"
+PATCH_META_FILE="${PATCH_FILE}.meta.json"
+PATCH_SHA1=$(create_sha1_meta_file "$PATCH_FILE" "$PATCH_META_FILE")
 
 # Create patch.sha1-from and patch.sha1-to
-OLD_SHA1=$(cat "${OLD_FILE}.sha1")
-NEW_SHA1=$(cat "${NEW_FILE}.sha1")
-PATCH_SHA1_FROM="${PATCH_FILE}.sha1-from"
-PATCH_SHA1_TO="${PATCH_FILE}.sha1-to"
-
-echo "$OLD_SHA1" > "${PATCH_SHA1_FROM}"
-echo "$NEW_SHA1" > "${PATCH_SHA1_TO}"
+oldJson=$(cat "$PATCH_META_FILE" | jq)
+newJson=$(jq -n --argjson existing "$oldJson" --arg from "$OLD_SHA1" --arg to "$NEW_SHA1" '$existing | ."sha1-from" = $from | ."sha1-to" = $to')
+echo "$newJson" > "$PATCH_META_FILE"
 
 echo "Created tracking metadata:" >&2
-echo "  ${OLD_FILE}.sha1    ($OLD_SHA1)" >&2
-echo "  ${NEW_FILE}.sha1    ($NEW_SHA1)" >&2
-echo "  ${PATCH_FILE}.sha1  ($(cat $PATCH_SHA1_FILE))" >&2
+#echo "  ${OLD_FILE}.sha1    ($OLD_SHA1)" >&2
+#echo "  ${NEW_FILE}.sha1    ($NEW_SHA1)" >&2
+#echo "  ${PATCH_FILE}.sha1  ($(cat $PATCH_SHA1_FILE))" >&2
+echo "# $OLD_META_FILE" >&2
+echo "$(cat "$OLD_META_FILE")" >&2
+echo "# $NEW_META_FILE" >&2
+echo "$(cat "$NEW_META_FILE")" >&2
+echo "# $PATCH_META_FILE" >&2
+echo "$(cat "$PATCH_META_FILE")" >&2
 

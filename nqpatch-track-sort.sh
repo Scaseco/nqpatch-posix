@@ -19,6 +19,11 @@ set -euo pipefail
 #   .zst -> zstd
 #   (none) -> plain text
 
+# TODO Future features:
+# * --rehash to force updating the hashes (updates hashes in the .meta.json file)
+# * --force to sort the data (even if apparently already sorted), implies --rehash
+# * Script should refuse to hash git lfs links!
+
 SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
 
 # Detect compression tool from file extension
@@ -68,8 +73,11 @@ fi
 
 OLD_FILE="$1"
 NEW_FILE="$2"
-OLD_SHA1_FILE="$OLD_FILE.sha1"
-NEW_SHA1_FILE="$NEW_FILE.sha1"
+#OLD_SHA1_FILE="$OLD_FILE.sha1"
+#NEW_SHA1_FILE="$NEW_FILE.sha1"
+
+OLD_META_FILE="${OLD_FILE}.meta.json"
+NEW_META_FILE="${NEW_FILE}.meta.json"
 
 SORT_OPTIONS=("${@:3}") # E.g. -S80g
 
@@ -78,20 +86,44 @@ SORT_OPTIONS=("${@:3}") # E.g. -S80g
 [[ ! -f "$NEW_FILE" ]] || { echo "Error: file already exits: $NEW_FILE" >&2; exit 1; }
 
 # Create SHA1 hash files if absent.
-create_sha1_file() {
+create_sha1_file_old() {
     local file="$1"
     local sha1_file="${2:-${file}.sha1}"
+    local sha1
     
     if [ ! -f "$sha1_file" ]; then
         echo "Generating $sha1_file" >&2
-        sha1sum "$file" | awk '{print $1}' > "$sha1_file.tmp"
-        mv "$sha1_file.tmp" "$sha1_file"
+        local sha1=$(sha1sum "$file" | awk '{print $1}')
+        echo "$sha1" > "$sha1_file"
+    else
+        sha1=$(cat "$sha1_file")
     fi
+}
+
+# New, more general approach with a .meta.json file.
+create_sha1_meta_file() {
+    local file="$1"
+    local meta_file="$2"
+    local sha1=""
+
+    # Load the 'sha1' field from an existing .meta.json file
+    [ -f "$meta_file" ] && sha1=$(jq -r '.sha1 // empty' "$meta_file")
+
+    if [ -z "$sha1" ]; then
+        echo "Computing checksum and updating $meta_file" >&2
+        local oldJson="{}"
+        [ -f "$meta_file" ] && oldJson=$(cat "$meta_file" | jq)
+        sha1=$(sha1sum "$file" | awk '{print $1}')
+        local newJson=$(jq -n --argjson existing "$oldJson" --arg sha1 "$sha1" '$existing | .sha1 = $sha1')
+        echo "$newJson" | jq > "$meta_file"
+    fi
+    echo "$sha1"
 }
 
 # Create sha1 as sibling to the old file
 echo "Hashing $OLD_FILE ..." >&2
-create_sha1_file "$OLD_FILE" "$OLD_SHA1_FILE"
+# create_sha1_file "$OLD_FILE" "$OLD_SHA1_FILE"
+OLD_SHA1=$(create_sha1_meta_file "$OLD_FILE" "$OLD_META_FILE")
 
 COMPRESSOR=$(detect_compressor "$NEW_FILE")
 echo "Sorting $OLD_FILE and compressing with [$COMPRESSOR]..." >&2
@@ -99,10 +131,16 @@ $(stream_cmd "$OLD_FILE") | LC_ALL=C sort -u ${SORT_OPTIONS[@]} | $COMPRESSOR > 
 mv "${NEW_FILE}.tmp" "$NEW_FILE"
 
 echo "Hashing $NEW_FILE ..." >&2
-create_sha1_file "$NEW_FILE" "$NEW_SHA1_FILE"
-cp "$OLD_SHA1_FILE" "${NEW_FILE}.sha1-original"
+# create_sha1_file "$NEW_FILE" "$NEW_SHA1_FILE"
+NEW_SHA1=$(create_sha1_meta_file "$NEW_FILE" "$NEW_META_FILE")
+
+oldJson=$(cat "$OLD_META_FILE" | jq)
+newJson=$(jq -n --argjson existing "$oldJson" --arg originalSha1 "$OLD_SHA1" '$existing | ."sha1-original" = $originalSha1')
+echo "$newJson" > "$NEW_META_FILE"
 
 echo "Completed. Created tracking metadata:" >&2
-echo "  $OLD_SHA1_FILE    $(cat "$OLD_SHA1_FILE")" >&2
-echo "  $NEW_SHA1_FILE    $(cat "$NEW_SHA1_FILE")" >&2
+echo "# $OLD_META_FILE" >&2
+echo "$(cat "$OLD_META_FILE")" >&2
+echo "# $NEW_META_FILE" >&2
+echo "$(cat "$NEW_META_FILE")" >&2
 
