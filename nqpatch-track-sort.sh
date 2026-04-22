@@ -83,7 +83,7 @@ SORT_OPTIONS=("${@:3}") # E.g. -S80g
 
 # Verify input files exist
 [[ -f "$OLD_FILE" ]] || { echo "Error: old file not found: $OLD_FILE" >&2; exit 1; }
-[[ ! -f "$NEW_FILE" ]] || { echo "Error: file already exits: $NEW_FILE" >&2; exit 1; }
+# [[ ! -f "$NEW_FILE" ]] || { echo "Error: file already exits: $NEW_FILE" >&2; exit 1; }
 
 # Create SHA1 hash files if absent.
 create_sha1_file_old() {

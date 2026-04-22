@@ -67,7 +67,7 @@ PATCH_FILE="${3:-}"
 [[ -f "$OLD_FILE" ]] || { echo "Error: old file not found: $OLD_FILE" >&2; exit 1; }
 [[ -f "$NEW_FILE" ]] || { echo "Error: new file not found: $NEW_FILE" >&2; exit 1; }
 [[ -n "$PATCH_FILE" ]] || { echo "Error: no patch file specified" >&2; exit 1; }
-[[ ! -f "$PATCH_FILE" ]] || { echo "Error: patch file already exists: $PATCH_FILE" >&2; exit 1; }
+# [[ ! -f "$PATCH_FILE" ]] || { echo "Error: patch file already exists: $PATCH_FILE" >&2; exit 1; }
 
 create_sha1_meta_file() {
     local file="$1"
