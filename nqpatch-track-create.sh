@@ -95,8 +95,12 @@ echo "Generating patch file $PATCH_FILE" >&2
 COMPRESSOR=$(detect_compressor "$PATCH_FILE")
 
 # Create patch to a tmp file first in case the process gets interrupted.
-"$SCRIPT_DIR/nqpatch" "create" "$OLD_FILE" "$NEW_FILE" | $COMPRESSOR > "${PATCH_FILE}.tmp"
-mv "${PATCH_FILE}.tmp" "$PATCH_FILE"
+if [ ! -f "$PATCH_FILE" ]; then
+    "$SCRIPT_DIR/nqpatch" "create" "$OLD_FILE" "$NEW_FILE" | $COMPRESSOR > "${PATCH_FILE}.tmp"
+    mv "${PATCH_FILE}.tmp" "$PATCH_FILE"
+else
+    echo "File $PATCH_FILE already exists" >&2
+fi
 
 OLD_META_FILE="${OLD_FILE}.meta.json"
 NEW_META_FILE="${NEW_FILE}.meta.json"
