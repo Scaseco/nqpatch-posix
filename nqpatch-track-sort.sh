@@ -126,9 +126,13 @@ echo "Hashing $OLD_FILE ..." >&2
 OLD_SHA1=$(create_sha1_meta_file "$OLD_FILE" "$OLD_META_FILE")
 
 COMPRESSOR=$(detect_compressor "$NEW_FILE")
-echo "Sorting $OLD_FILE and compressing with [$COMPRESSOR]..." >&2
-$(stream_cmd "$OLD_FILE") | LC_ALL=C sort -u ${SORT_OPTIONS[@]} | $COMPRESSOR > "${NEW_FILE}.tmp"
-mv "${NEW_FILE}.tmp" "$NEW_FILE"
+if [ ! -f "$NEW_FILE" ]; then
+    echo "Sorting $OLD_FILE and compressing with [$COMPRESSOR]..." >&2
+    $(stream_cmd "$OLD_FILE") | LC_ALL=C sort -u ${SORT_OPTIONS[@]} | $COMPRESSOR > "${NEW_FILE}.tmp"
+    mv "${NEW_FILE}.tmp" "$NEW_FILE"
+else
+    echo "File $NEW_FILE already exists." >&2
+fi
 
 echo "Hashing $NEW_FILE ..." >&2
 # create_sha1_file "$NEW_FILE" "$NEW_SHA1_FILE"
