@@ -138,7 +138,8 @@ echo "Hashing $NEW_FILE ..." >&2
 # create_sha1_file "$NEW_FILE" "$NEW_SHA1_FILE"
 NEW_SHA1=$(create_sha1_meta_file "$NEW_FILE" "$NEW_META_FILE")
 
-oldJson=$(cat "$OLD_META_FILE" | jq)
+# XXX oldJson is a bad name - its the existing state of newJson
+oldJson=$(cat "$NEW_META_FILE" | jq)
 newJson=$(jq -n --argjson existing "$oldJson" --arg originalSha1 "$OLD_SHA1" '$existing | ."sha1-original" = $originalSha1')
 echo "$newJson" > "$NEW_META_FILE"
 
