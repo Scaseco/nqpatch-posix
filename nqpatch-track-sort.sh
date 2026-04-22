@@ -111,9 +111,9 @@ create_sha1_meta_file() {
 
     if [ -z "$sha1" ]; then
         echo "Computing checksum and updating $meta_file" >&2
+        sha1=$(sha1sum "$file" | awk '{print $1}')
         local oldJson="{}"
         [ -f "$meta_file" ] && oldJson=$(cat "$meta_file" | jq)
-        sha1=$(sha1sum "$file" | awk '{print $1}')
         local newJson=$(jq -n --argjson existing "$oldJson" --arg sha1 "$sha1" '$existing | .sha1 = $sha1')
         echo "$newJson" | jq > "$meta_file"
     fi
