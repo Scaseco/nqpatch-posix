@@ -7,35 +7,24 @@ if [ $# -lt 1 ]; then
     exit 1
 fi
 
-# Resolves an argument to a command string factory
-# Arguments starting with '@' are interpreted as commands, such as '@lbzcat patch1.rdfp.bz2'.
-# Uses zcat -f as a universal source (works for several formats including .bz2 if zutils is installed)
-resolve_factory() {
-    [[ "$1" == @* ]] && echo "${1:1}" || printf 'zcat -f -- %q' "$1"
-}
-
-BASE_FACTORY=$(resolve_factory "$1")
-PATCHES=("${@:2}")
-
-# Fast path if there are no patches
-if [ "${#PATCHES[@]}" -eq 0 ]; then
-    eval "$BASE_FACTORY"
-    exit 0
-fi
+# Resolves a file argument to a command string that streams its decoded content
+stream_cmd() { printf 'zcat -f -- %q' "$1"; }
 
 MAX_FDS=$(ulimit -n)
 SAFE_BATCH=$(( MAX_FDS - 20 ))
 
-# Build MERGE_CMD: include base as "A q", then patches
-MERGE_CMD="sort -m -s -k2 --batch-size=$SAFE_BATCH"
+BASE_STREAM_CMD=$(stream_cmd "$1")
+PATCHES=("${@:2}")
+
+MERGE_CMD="sort -m -s -k2 --batch-size=$SAFE_BATCH" 
 
 # Base: wrap in <(...) and tag with "A "
-MERGE_CMD="$MERGE_CMD <($BASE_FACTORY | sed 's/^/A /')"
-
+MERGE_CMD="$MERGE_CMD <($BASE_STREAM_CMD | sed 's/^/A /')"
+ 
 # Patches: as-is (already "A q" or "D q")
 for arg in "${PATCHES[@]}"; do
-    FACTORY=$(resolve_factory "$arg")
-    MERGE_CMD="$MERGE_CMD <($FACTORY)"
+   PATCH_STREAM_CMD=$(stream_cmd "$arg")
+   MERGE_CMD="$MERGE_CMD <($PATCH_STREAM_CMD)"
 done
 
 # Apply patches by treating base as adds, then reusing merge logic

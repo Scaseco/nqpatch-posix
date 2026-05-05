@@ -1,10 +1,11 @@
 #!/bin/bash
+set -euo pipefail
 
 # This creates a sorted .rdfp patch (A/D-prefixed lines) from two sorted .nq files.
 # ⚠️ Byte-level diff: expects identical whitespace, encoding, and line endings.
 
-OLD="$1"
-NEW="$2"
+OLD="${1:-}"
+NEW="${2:-}"
 
 if [ -z "$OLD" -o -z "$NEW" ]; then
   echo "Usage: $0 old.sorted.nq new.sorted.nq → patch.sorted.rdfp"
@@ -21,10 +22,13 @@ if [ -z "$OLD" -o -z "$NEW" ]; then
   exit 1
 fi
 
+# Resolves a file argument to a command string that streams its decoded content
+stream_cmd() { printf 'zcat -f -- %q' "$1"; }
+
 # Lines start with A (added) and D (deleted) according to:
 # https://afs.github.io/rdf-delta/rdf-patch.html
 
-LC_ALL=C comm -3 "$OLD" "$NEW" | awk '
+LC_ALL=C comm -3 <($(stream_cmd "$OLD")) <($(stream_cmd "$NEW")) | awk '
   /^[^\t]/     { print "D " $0; next }   # No leading tab -> only in file1 (removed)
   /^\t[^\t]/   { sub(/^\t/, "", $0); print "A " $0 }  # One leading tab -> only in file2 (added)
 '
