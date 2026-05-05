@@ -1,7 +1,9 @@
 # NQPatch
 
 Command-line tools for efficiently patching large sorted N-Quads RDF files.
-Implemented as bash scripts backed by the POSIX tooling awk, sort, and sed.
+Implemented as bash scripts backed by the POSIX tooling awk, sort, comm, and sed.
+
+As a demo, check out the sorted Wikidata truthy dumps and diffs that can be processed with the tooling of this repo: [hf.co/datasets/Aklakan/wikidata-sorted-nquads-and-diffs](https://huggingface.co/datasets/Aklakan/wikidata-sorted-nquads-and-diffs).
 
 ## Tracking Layer
 
@@ -32,6 +34,8 @@ This project provides command-line tools for working with RDF patches, accessibl
 - **nqpatch merge**: Merge multiple patches into a single patch
 - **nqpatch track sort**: Sort an N-Quads file and create tracking metadata
 - **nqpatch track create**: Create a patch and tracking metadata (patch filename must be explicitly provided)
+
+The entrypoint **nqpatch** features the sub-commands `create`, `apply` and `merge` that delegate to the scripts listed above.
 
 ## Design
 
