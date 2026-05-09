@@ -5,21 +5,6 @@ Implemented as bash scripts backed by the POSIX tooling awk, sort, comm, and sed
 
 As a demo, check out the sorted Wikidata truthy dumps and diffs that can be processed with the tooling of this repo: [hf.co/datasets/Aklakan/wikidata-sorted-nquads-and-diffs](https://huggingface.co/datasets/Aklakan/wikidata-sorted-nquads-and-diffs).
 
-## Tracking Layer
-
-NQPatch includes a *tracking layer* to manage patch relationships using SHA1 checksums.
-The metadata for a file `x` is stored in a file `x.meta.json`.
-
-- **nqpatch track sort input output**: Creates `output` by sorting `input`
-  - Creates or extends `input.meta.json` with the sha1 hash of the input file
-  - Creates or extends `output.meta.json` with the `sha1` and `sha1-original` keys with the hashes of the output file and the input file, respectively.
-- **nqpatch track create**: `nqpatch track create old_dump new_dump patch.rdfp`: Creates `patch.rdfp` as the diff between `old` and `new`
-  - Creates or extends `old_dump.meta.json` with the sha1 hash of the `old_dump` file
-  - Creates or extends `new_dump.meta.json` with the sha1 hash of the `new_dump` file
-  - Creates or extends `patch.rdfp.meta.json` with the `sha1-from` and `sha1-to` keys set to the hashes of the old/new dumps
-  - Patch filename must be explicitly provided (not auto-generated)
-  - Supports compressed patch output (.gz, .bz2, .xz, .zst)
-
 ## Project Status
 
 - v2.x: Functional and tested with `.meta.json` metadata storage
@@ -36,30 +21,6 @@ This project provides command-line tools for working with RDF patches, accessibl
 - **nqpatch track create**: Create a patch and tracking metadata (patch filename must be explicitly provided)
 
 The entrypoint **nqpatch** features the sub-commands `create`, `apply` and `merge` that delegate to the scripts listed above.
-
-## Design
-
-The tools rely on `zcat` for transparent decompression of compressed files. By default, system `zcat` only supports gzip, but installing [`zutils`](https://linux.die.net/man/1/zutils) replaces it with a configurable decompression infrastructure that handles bzip2, gzip, lzip, xz, and zstd.
-
-All tools work on the basis of byte-sorted N-Quads (e.g., `LC_ALL=C sort -u`). The `.rdfp` RDF patch files are sorted N-Quads prefixed with `A ` or `D ` for additions or deletions, respectively.
-
-⚠️ For maximum performance, zutils should be configured to leverage the fastest (de-)compression tools. Also, for processing multiple files simultaneously, you want
-   to limit the resources for each tool. The following zutils configuration uses parallel versions of the compression codec tools and restricts them to 4 cores. The file can be placed under `.config/zutils.conf`:
-```
-bz2 = lbzip2 -n4
-gz = pigz -p4
-xz = pixz -p4
-zst = zstd -T4
-lz = lz4
-```
-
-The corresponding packages on Ubuntu are:
-```bash
-sudo apt-get install lbzip2 pigz pixz zstd lz4
-```
-
-Details can be found at: [https://www.nongnu.org/zutils/manual/zutils_manual.html#Configuration](https://www.nongnu.org/zutils/manual/zutils_manual.html#Configuration)
-
 
 ## Quick Start
 
@@ -94,8 +55,6 @@ cd nqpatch-posix
 chmod +x nqpatch *.sh
 ```
 
-
-
 ## Usage
 
 ### Creating Patches
@@ -125,7 +84,20 @@ nqpatch apply local-data.nq <(curl https://example.org/patch.rdfp)
 nqpatch merge patch1.rdfp patch2.rdfp > merged.rdfp
 ```
 
-### Tracking Patches
+### Tracking Layer
+
+NQPatch includes a *tracking layer* to manage patch relationships using SHA1 checksums.
+The metadata for a file `x` is stored in a file `x.meta.json`.
+
+- **nqpatch track sort input output**: Creates `output` by sorting `input`
+  - Creates or extends `input.meta.json` with the sha1 hash of the input file
+  - Creates or extends `output.meta.json` with the `sha1` and `sha1-original` keys with the hashes of the output file and the input file, respectively.
+- **nqpatch track create**: `nqpatch track create old_dump new_dump patch.rdfp`: Creates `patch.rdfp` as the diff between `old` and `new`
+  - Creates or extends `old_dump.meta.json` with the sha1 hash of the `old_dump` file
+  - Creates or extends `new_dump.meta.json` with the sha1 hash of the `new_dump` file
+  - Creates or extends `patch.rdfp.meta.json` with the `sha1-from` and `sha1-to` keys set to the hashes of the old/new dumps
+  - Patch filename must be explicitly provided (not auto-generated)
+  - Supports compressed patch output (.gz, .bz2, .xz, .zst)
 
 ```bash
 # Create tracking metadata
@@ -138,8 +110,7 @@ The tracking layer creates `.meta.json` files containing:
 - `sha1-from` (for patches) - SHA1 hash of the source snapshot
 - `sha1-to` (for patches) - SHA1 hash of the target snapshot
 
-
-### Tracking Layer Design
+#### Tracking Layer Design
 
 The tracking layer uses SHA1 hashes to establish relationships between snapshots and patches, stored in `.meta.json` files:
 
@@ -155,7 +126,30 @@ Future tools can use these files to:
 - Verify patch integrity
 - Optimize patch chains vs full snapshot downloads
 
-### Docker
+## Design
+
+The tools rely on `zcat` for transparent decompression of compressed files. By default, system `zcat` only supports gzip, but installing [`zutils`](https://linux.die.net/man/1/zutils) replaces it with a configurable decompression infrastructure that handles bzip2, gzip, lzip, xz, and zstd.
+
+All tools work on the basis of byte-sorted N-Quads (e.g., `LC_ALL=C sort -u`). The `.rdfp` RDF patch files are sorted N-Quads prefixed with `A ` or `D ` for additions or deletions, respectively.
+
+⚠️ For maximum performance, zutils should be configured to leverage the fastest (de-)compression tools. Also, for processing multiple files simultaneously, you want
+   to limit the resources for each tool. The following zutils configuration uses parallel versions of the compression codec tools and restricts them to 4 cores. The file can be placed under `.config/zutils.conf`:
+```
+bz2 = lbzip2 -n4
+gz = pigz -p4
+xz = pixz -p4
+zst = zstd -T4
+lz = lz4
+```
+
+The corresponding packages on Ubuntu are:
+```bash
+sudo apt-get install lbzip2 pigz pixz zstd lz4
+```
+
+Details can be found at: [https://www.nongnu.org/zutils/manual/zutils_manual.html#Configuration](https://www.nongnu.org/zutils/manual/zutils_manual.html#Configuration)
+
+## Docker
 
 Build the Docker image:
 
@@ -169,7 +163,7 @@ Or pull from a registry:
 docker pull aksw/nqpatch
 ```
 
-#### Usage
+### Usage
 
 ⚠️ Make sure to specify `--log-driver=none` \
 Otherwise, all data from stdout will also be written to the docker logs.
@@ -271,4 +265,3 @@ See `bats-tests/TESTING.md` for details on the test infrastructure.
 ## License
 
 This project is licensed under the Apache License, Version 2.0. See the [LICENSE](LICENSE) file for details.
-
