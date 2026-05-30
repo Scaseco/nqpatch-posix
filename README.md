@@ -20,8 +20,6 @@ This project provides command-line tools for working with RDF patches, accessibl
 - **nqpatch track sort**: Sort an N-Quads file and create tracking metadata
 - **nqpatch track create**: Create a patch and tracking metadata (patch filename must be explicitly provided)
 
-The entrypoint **nqpatch** features the sub-commands `create`, `apply` and `merge` that delegate to the scripts listed above.
-
 ## Quick Start
 
 ```bash
